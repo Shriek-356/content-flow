@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Tổng Kết Nâng Cấp Hệ Thống Content Automation V2 - Phòng IT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --border-color: #cbd5e1;
+            --accent-primary: #0284c7;
+            --accent-secondary: #059669;
+            --accent-warning: #d97706;
+            --text-main: #0f172a;
+            --text-sub: #334155;
+            --text-muted: #64748b;
+            --table-header-bg: #f1f5f9;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .doc-header-top {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid var(--text-main);
+            padding-bottom: 8px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .title-block {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .doc-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+            text-transform: uppercase;
+        }
+
+        .doc-subtitle {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-bottom: 12px;
+        }
+
+        .doc-meta {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .section-head {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-top: 28px;
+            margin-bottom: 14px;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+
+        p {
+            font-size: 14.5px;
+            color: var(--text-sub);
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: var(--table-header-bg);
+            color: var(--text-main);
+            text-align: left;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            font-weight: 700;
+        }
+
+        td {
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            color: var(--text-sub);
+            vertical-align: top;
+        }
+
+        ul,
+        ol {
+            margin-left: 20px;
+            margin-bottom: 16px;
+            font-size: 14.5px;
+            color: var(--text-sub);
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        .flow-box {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 6px;
+            padding: 14px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #0369a1;
+            text-align: center;
+            margin: 16px 0;
+            line-height: 1.8;
+        }
+
+        .code-block {
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 14px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+        }
+
+        .badge-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            background: var(--accent-primary);
+        }
+
+        .badge-success {
+            background: var(--accent-secondary);
+        }
+
+        .badge-warning {
+            background: var(--accent-warning);
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-top: 40px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .btn-print {
+            display: block;
+            width: 200px;
+            margin: 30px auto 0;
+            padding: 10px;
+            background: var(--accent-primary);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-print:hover {
+            background: #0369a1;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .container {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+                max-width: 100%;
+            }
+
+            .btn-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Top Banner -->
+        <div class="doc-header-top">
+            <span>Báo Cáo Kỹ Thuật Tối Ưu Hệ Thống Automation V2</span>
+            <span>Phòng IT & Automation Asalar</span>
+        </div>
+
+        <!-- Title Block -->
+        <div class="title-block">
+            <h1 class="doc-title">BÁO CÁO NÂNG CẤP & TỐI ƯU HỆ THỐNG CONTENT AUTOMATION V2</h1>
+            <div class="doc-subtitle">Chunked Upload Video Dung Lượng Lớn – Tự Động Thiết Kế HTML Infographic – Chuẩn
+                Hóa Bố Cục Album Facebook</div>
+            <div class="doc-meta">Người thực hiện: Phòng IT | Tài liệu Kỹ thuật Vận hành | Ngày 12/08/2026</div>
+        </div>
+
+        <!-- 1. MỤC TIÊU -->
+        <h2 class="section-head">1. MỤC TIÊU & TỔNG QUAN NÂNG CẤP 2 NGÀY QUA</h2>
+        <p>
+            Trong 2 ngày vừa qua (10/08 - 12/08/2026), Phòng IT đã tiến hành nâng cấp toàn diện và tối ưu hóa hạ tầng tự
+            động hóa Content Automation (Flow V2). Đột phá lần này tập trung giải quyết triệt để các góc khuất kỹ thuật:
+            từ bài toán <strong>Upload Video dung lượng lớn (bypass lỗi 413 Payload Too Large)</strong>, <strong>AI chọn
+                Video bằng Thumbnail</strong>, đến <strong>Kiến trúc Tự động Thiết kế Infographic bằng HTML/CSS</strong>
+            và <strong>Tự động Khóa Style Bố cục Facebook Album</strong>.
+        </p>
+        <p>
+            Hệ thống nâng cấp giúp luồng chạy đạt độ ổn định 100%, không phát sinh lỗi nghẽn băng thông, không bị vỡ
+            giao diện ảnh Album Facebook và sẵn sàng tích hợp các mô hình AI tiên tiến (Gemini 1.5 Pro, NVIDIA Nemotron
+            3 Ultra Free).
+        </p>
+
+        <!-- 2. 5 CÂU HỎI CỐT LÕI V2 -->
+        <h2 class="section-head">2. 5 CÂU HỎI CỐT LÕI KỸ THUẬT V2</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 28%;">Câu hỏi</th>
+                    <th style="width: 72%;">Giải pháp Kỹ thuật Đã Triển khai</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>1. Làm sao đăng Video lớn không bị lỗi 413?</strong></td>
+                    <td>
+                        Xây dựng Node.js Microservice (<code>index.js</code>) xử lý upload video phân đoạn
+                        (<strong>Resumable Chunked Upload 1MB/chunk</strong> qua Facebook Graph API v19.0) với 3 giai
+                        đoạn: <code>start</code> ➔ <code>transfer</code> ➔ <code>finish</code>. Tự bóc tách link
+                        <code>confirm</code> trên trang quét virus Google Drive.
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>2. Làm sao AI chọn Video phù hợp?</strong></td>
+                    <td>
+                        Thay vì tải toàn bộ Video nặng về máy, luồng tự động lấy <code>thumbnailLink</code> (50KB) từ
+                        Google Drive API gửi cho Gemini Vision chọn ra video khớp nhất với caption bài viết. Đổi tên
+                        file trên Drive thành <code>_posted</code> chống đăng lặp.
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>3. Làm sao thiết kế Ảnh Infographic tự động?</strong></td>
+                    <td>
+                        Node <code>Prompt Builder</code> bóc tách Quy chuẩn Ecolar (Gradient <code>#056823</code> &rarr;
+                        <code>#bfd730</code>, Font Nunito Sans, Hotline Badge <code>0868 515 668</code>) và biến Binary
+                        ảnh thô thành <strong>Base64 Data URI</strong> nhúng thẳng vào thẻ
+                        <code>&lt;img src="data:image/jpeg;base64,..."&gt;</code> giải quyết 100% lỗi CORS/403.
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>4. Làm sao Album không bị vỡ giao diện?</strong></td>
+                    <td>
+                        Tính toán và khóa cứng 1 Style chung cho toàn bộ các Slide của cùng 1 bài viết (Random chuẩn
+                        theo nhóm số lượng ảnh: 1 ảnh, 2 ảnh, 3 ảnh, 4+ ảnh). Cấp sẵn số đo <code>canvas_width</code> &
+                        <code>canvas_height</code> chính xác từng ô (VD: Slide 1 <code>600x1200px</code>, Slide 2 & 3
+                        <code>600x600px</code>).
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>5. Model LLM nào tối ưu nhất?</strong></td>
+                    <td>
+                        • <strong>Tự nhiên & Thẩm mỹ cao nhất:</strong> <code>models/gemini-1.5-pro</code>.<br>
+                        • <strong>Miễn phí 100% & Logic Code cực mạnh:</strong>
+                        <code>nvidia/nemotron-3-ultra:free</code> (NVIDIA 550B MoE) hoặc
+                        <code>qwen/qwen-2.5-coder-32b-instruct:free</code> qua OpenRouter.
+                    </td>
+                </tr>
+            </tbody>
+            </tbody>
+        </table>
+
+        <!-- 3. BẢNG QUY CHUẨN BỐ CỤC STYLE ALBUM -->
+        <h2 class="section-head">3. BẢNG QUY CHUẨN KHÓA STYLE & KÍCH THƯỚC CANVAS (ALBUM FACEBOOK)</h2>
+        <p>Hệ thống tự động nhận diện tổng số lượng ảnh bài đăng và Random chọn 1 Style cố định cho toàn bộ các Slide
+            của bài viết đó:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Nhóm Bài</th>
+                    <th style="width: 25%;">Style Ứng Viên</th>
+                    <th style="width: 60%;">Phân Bố Kích Thước Canvas Thực Tế</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Bài 1 Ảnh</strong></td>
+                    <td><span class="badge-tag">Style 1</span></td>
+                    <td>Slide 1: <code>1200 x 1200px</code> (Full khung vuông)</td>
+                </tr>
+                <tr>
+                    <td><strong>Bài 2 Ảnh</strong></td>
+                    <td><span class="badge-tag">Style 2</span> / <span class="badge-tag">Style 3</span></td>
+                    <td>• <strong>Style 2:</strong> 2 cột đứng <code>600 x 1200px</code><br>• <strong>Style 3:</strong>
+                        2 hàng ngang <code>1200 x 600px</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Bài 3 Ảnh</strong></td>
+                    <td><span class="badge-tag badge-success">Style 5</span> / <span
+                            class="badge-tag badge-success">Style 6</span> / <span class="badge-tag badge-success">Style
+                            7</span></td>
+                    <td>
+                        • <strong>Style 5:</strong> 3 cột đứng <code>400 x 1200px</code><br>
+                        • <strong>Style 6:</strong> Slide 1 Bìa to <code>600 x 1200px</code> + Slide 2 & 3 Vuông
+                        <code>600 x 600px</code><br>
+                        • <strong>Style 7:</strong> Slide 1 Bìa to <code>1200 x 600px</code> + Slide 2 & 3 Vuông
+                        <code>600 x 600px</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Bài 4+ Ảnh</strong></td>
+                    <td><span class="badge-tag badge-warning">Style 8</span> / <span
+                            class="badge-tag badge-warning">Style 9</span> / <span class="badge-tag badge-warning">Style
+                            10</span></td>
+                    <td>
+                        • <strong>Style 8:</strong> Lưới 4 ô vuông <code>600 x 600px</code><br>
+                        • <strong>Style 9:</strong> Slide 1 To trái <code>600 x 1200px</code> + 3 Slide nhỏ
+                        <code>600 x 400px</code><br>
+                        • <strong>Style 10:</strong> Slide 1 To trên <code>1200 x 600px</code> + 3 Slide nhỏ
+                        <code>400 x 600px</code>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- 4. CHI TIẾT LUỒNG VẬN HÀNH V2 -->
+        <h2 class="section-head">4. SƠ ĐỒ LUỒNG VẬN HÀNH AUTOMATION V2</h2>
+        <div class="flow-box">
+            [1. Nhập Sheets / Gemini Gen Content] &rarr; [2. Visual Brief Builder & Bốc Ảnh Drive] &rarr; [3. Prompt
+            Builder (Base64 + Khóa Style Canvas)] &rarr; [4. Model Gen HTML/CSS (Gemini Pro / Nemotron Free)] &rarr; [5.
+            Render Infographic & Đăng Auto FB (Node.js Resumable Upload)]
+        </div>
+
+        <!-- 5. CẤU TRÚC JSON CHUẨN HÓA MỚI -->
+        <h2 class="section-head">5. CẤU TRÚC JSON CHUẨN HÓA MỚI (MODULAR BRIEF + CLEAN SLIDES)</h2>
+        <p>Mã nguồn Node <code>Visual Brief Builder</code> được tái cấu trúc sạch gọn: Đóng gói 1
+            <code>visual_brief</code> chung duy nhất và 1 mảng <code>slides</code> riêng biệt:</p>
+
+        <div class="code-block">
+            {
+            "visual_brief": {
+            "canvas": "Ratio carousel post: 1200x1200px - 300dpi (1:1)...",
+            "image_count": 3,
+            "typography": { "heading": "...", "subtext": "..." },
+            "image_rule": "- Nguyên tắc chọn ảnh...",
+            "background": "- Màu nền: Gradient #056823 -> #bfd730...",
+            "footer_badge": "- Hotline 0868 515 668..."
+            },
+            "slides": [
+            {
+            "slide_index": 1,
+            "headline": "MẸO CHỌN GÀ MÁI CHUẨN",
+            "subtext": "Bí quyết giúp bà con nuôi gà siêu trứng...",
+            "raw_image_1_url": "data:image/jpeg;base64,/9j/4AAQ..."
+            },
+            ...
+            ]
+            }
+        </div>
+
+        <!-- 6. BẢNG SO SÁNH HIỆU QUẢ -->
+        <h2 class="section-head">6. BẢNG SO SÁNH HIỆU QUẢ VẬN HÀNH HỆ THỐNG V1 VS V2</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tính Năng Vận Hành</th>
+                    <th>Hệ Thống Cũ (V1)</th>
+                    <th>Hệ Thống Nâng Cấp (V2)</th>
+                    <th>Hiệu Quả Đạt Được</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Upload Video Lớn</strong></td>
+                    <td style="color: #dc2626;">Dễ lỗi 413 Payload Too Large</td>
+                    <td style="color: #059669; font-weight: 600;">Resumable Chunked Upload 1MB Node.js</td>
+                    <td><strong>Tải video dung lượng lớn 100% mượt</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Chọn Video Phù Hợp</strong></td>
+                    <td>Tải toàn bộ file video về máy rất nặng</td>
+                    <td>Gemini phân tích <code>thumbnailLink</code> (50KB)</td>
+                    <td><strong>Tiết kiệm 99% dung lượng & băng thông</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Bố Cục Infographic</strong></td>
+                    <td>Dễ bị lệch tỉ lệ canvas giữa các slide</td>
+                    <td>Tự động khóa Style & gán số đo <code>W x H</code></td>
+                    <td><strong>Bộ ảnh Album chuẩn tỉ lệ Facebook 100%</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Nhúng Ảnh Thô HTML</strong></td>
+                    <td>Dễ dính lỗi CORS/403 link Drive</td>
+                    <td>Tự động convert Binary thành Base64 Data URI</td>
+                    <td><strong>Render ảnh HTML tức thì, 0% lỗi link</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Chi Phí Model AI</strong></td>
+                    <td>Phụ thuộc model có phí</td>
+                    <td>Hỗ trợ <code>Nemotron 3 Ultra Free</code> ($0/token)</td>
+                    <td><strong>Tối ưu chi phí API về 0 VNĐ</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Footer note -->
+        <div class="footer-note">
+            — Hết báo cáo nâng cấp —
+        </div>
+
+        <!-- Print Button -->
+        <button class="btn-print" onclick="window.print()">In / Export PDF Báo Cáo</button>
+    </div>
+
+</body>
+
+</html>

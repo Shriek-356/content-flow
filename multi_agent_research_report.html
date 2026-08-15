@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nghiên Cứu Chuyên Sâu: Kiến Trúc & Xây Dựng Đội Ngũ Multi-Agent (Multi-Agent Research & Execution Systems)
+    </title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* LIGHT THEME (DEFAULT) */
+        :root[data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f1f5f9;
+            --border-color: #e2e8f0;
+            --border-glow: rgba(99, 102, 241, 0.4);
+
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+
+            --accent-purple: #7c3aed;
+            --accent-indigo: #4f46e5;
+            --accent-cyan: #0891b2;
+            --accent-emerald: #059669;
+            --accent-rose: #e11d48;
+            --accent-amber: #d97706;
+
+            --gradient-primary: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #c026d3 100%);
+            --gradient-glow: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.08), transparent 70%);
+
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.06);
+            --shadow-glow: 0 10px 25px -5px rgba(79, 70, 229, 0.15);
+
+            --diagram-bg: #f1f5f9;
+            --code-bg: #1e293b;
+            --code-text: #f8fafc;
+        }
+
+        /* DARK THEME OPTION */
+        :root[data-theme="dark"] {
+            --bg-primary: #0b0f19;
+            --bg-secondary: #111827;
+            --bg-card: rgba(17, 24, 39, 0.8);
+            --bg-card-hover: rgba(31, 41, 55, 0.9);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(99, 102, 241, 0.3);
+
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+
+            --accent-purple: #8b5cf6;
+            --accent-indigo: #6366f1;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+
+            --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+            --gradient-glow: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15), transparent 70%);
+
+            --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --shadow-glow: 0 12px 24px -10px rgba(99, 102, 241, 0.3);
+
+            --diagram-bg: #080c14;
+            --code-bg: #050811;
+            --code-text: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+            background-image: var(--gradient-glow);
+            background-attachment: fixed;
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header Styling */
+        header {
+            text-align: center;
+            padding: 3rem 1rem 2.5rem 1rem;
+            position: relative;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .top-toolbar {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .theme-toggle-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle-btn:hover {
+            border-color: var(--accent-indigo);
+            transform: translateY(-2px);
+        }
+
+        .badge-header {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 9999px;
+            background: rgba(79, 70, 229, 0.1);
+            border: 1px solid rgba(79, 70, 229, 0.25);
+            color: var(--accent-indigo);
+            font-size: 0.875rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+        }
+
+        h1 {
+            font-size: 2.75rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            line-height: 1.25;
+        }
+
+        p.subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 850px;
+            margin: 0 auto 1.75rem auto;
+        }
+
+        .source-tags {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .source-tag {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 7px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .source-tag:hover {
+            border-color: var(--accent-indigo);
+            color: var(--accent-indigo);
+            transform: translateY(-2px);
+        }
+
+        /* Metric Cards Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2.5rem 0;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            border-color: var(--border-glow);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--accent-indigo);
+        }
+
+        .metric-desc {
+            font-size: 0.825rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        /* Navigation Tabs */
+        .tabs-nav {
+            display: flex;
+            gap: 8px;
+            background: var(--bg-secondary);
+            padding: 6px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-card-hover);
+        }
+
+        .tab-btn.active {
+            background: var(--accent-indigo);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        /* Section & Card Components */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.75rem;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--accent-indigo);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Diagram Component */
+        .arch-diagram {
+            background: var(--diagram-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+
+        .orchestrator-box {
+            background: var(--bg-card);
+            border: 2px solid var(--accent-indigo);
+            border-radius: 14px;
+            padding: 1.5rem;
+            text-align: center;
+            max-width: 520px;
+            margin: 0 auto 2rem auto;
+            box-shadow: var(--shadow-md);
+        }
+
+        .worker-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        .worker-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .connector-line {
+            width: 2px;
+            height: 28px;
+            background: var(--accent-indigo);
+            margin: 0 auto;
+        }
+
+        /* List Items & Features */
+        .feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: var(--bg-card-hover);
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .feature-item i {
+            color: var(--accent-emerald);
+            margin-top: 4px;
+        }
+
+        /* Table Styling */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin: 1.5rem 0;
+            box-shadow: var(--shadow-sm);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.925rem;
+        }
+
+        th {
+            background: var(--accent-indigo);
+            color: #ffffff;
+            padding: 14px 18px;
+            font-weight: 700;
+        }
+
+        td {
+            padding: 14px 18px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        tr:nth-child(even) td {
+            background: var(--bg-card-hover);
+        }
+
+        /* Code Blocks */
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            color: var(--code-text);
+            margin: 1rem 0;
+        }
+
+        code {
+            font-family: 'Fira Code', monospace;
+            color: var(--accent-purple);
+        }
+
+        /* Callouts */
+        .callout {
+            border-left: 4px solid var(--accent-purple);
+            background: rgba(124, 58, 237, 0.08);
+            padding: 1.25rem;
+            border-radius: 0 12px 12px 0;
+            margin: 1.5rem 0;
+            color: var(--text-primary);
+        }
+
+        .callout.tip {
+            border-left-color: var(--accent-emerald);
+            background: rgba(5, 150, 105, 0.08);
+        }
+
+        .callout.warning {
+            border-left-color: var(--accent-amber);
+            background: rgba(217, 119, 6, 0.08);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 1rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="top-toolbar">
+                <button class="theme-toggle-btn" onclick="toggleTheme()">
+                    <i class="fa-solid fa-sun" id="theme-icon"></i>
+                    <span id="theme-text">Nền Sáng</span>
+                </button>
+            </div>
+
+            <div class="badge-header">
+                <i class="fa-solid fa-microchip"></i> REPORT & ARCHITECTURE SOP 2026
+            </div>
+            <h1>Báo Cáo Nghiên Cứu Chuyên Sâu: Thiết Kế & Xây Dựng Hệ Thống Đội Ngũ Multi-Agent</h1>
+            <p class="subtitle">
+                Tổng hợp kinh nghiệm kỹ thuật thực chiến từ Anthropic (Claude Multi-Agent Research System), RAFT Agent
+                Team và các mô hình Multi-Agent hàng đầu hiện nay.
+            </p>
+
+            <div class="source-tags">
+                <a href="https://www.anthropic.com/engineering/multi-agent-research-system" target="_blank"
+                    class="source-tag">
+                    <i class="fa-solid fa-link"></i> Anthropic Engineering
+                </a>
+                <a href="https://docs.raft.build/build-your-agent-team/" target="_blank" class="source-tag">
+                    <i class="fa-solid fa-layer-group"></i> RAFT Agent Team Docs
+                </a>
+                <a href="https://x.com/EXM7777/status/2078476892127318295" target="_blank" class="source-tag">
+                    <i class="fa-brands fa-x-twitter"></i> Multi-Agent Case Studies
+                </a>
+            </div>
+        </header>
+
+        <!-- Key Metrics Highlight -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value">+90.2%</div>
+                <div class="metric-label">Hiệu suất nghiên cứu</div>
+                <div class="metric-desc">Tăng trưởng vượt trội so với Single-Agent Opus 4 khi giải bài toán phức tạp.
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">90%</div>
+                <div class="metric-label">Tiết kiệm thời gian</div>
+                <div class="metric-desc">Nhờ cơ chế gọi Tool & phân rã Subagent chạy song song (Parallel Tool Calling).
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">15x</div>
+                <div class="metric-label">Mức tiêu thụ Token</div>
+                <div class="metric-desc">Sử dụng Token nhiều hơn so với Chat thường để nén thông tin từ nhiều nguồn
+                    context riêng biệt.</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">40%</div>
+                <div class="metric-label">Tăng tốc nhờ Tool-Testing AI</div>
+                <div class="metric-desc">Tự động tối ưu mô tả Tool (MCP Ergonomics) bằng Agent chuyên test tool.</div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs-nav">
+            <button class="tab-btn active" onclick="openTab(event, 'tab-overview')">
+                <i class="fa-solid fa-compass"></i> 1. Tổng Quan & Bài Toán
+            </button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-architecture')">
+                <i class="fa-solid fa-sitemap"></i> 2. Kiến Trúc Multi-Agent
+            </button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-prompting')">
+                <i class="fa-solid fa-terminal"></i> 3. 8 Quy Tắc Prompting & Scaling
+            </button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-evals')">
+                <i class="fa-solid fa-chart-line"></i> 4. Đánh Giá (Evals) & LLM-Judge
+            </button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-production')">
+                <i class="fa-solid fa-server"></i> 5. Triển Khai Production & Resilience
+            </button>
+        </div>
+
+        <!-- TAB 1: TỔNG QUAN & BÀI TOÁN -->
+        <div id="tab-overview" class="tab-content active">
+            <div class="section-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fa-solid fa-puzzle-piece"></i></div>
+                        <div class="card-title">Tại Sao Single-Agent Thất Bại Trước Nghiên Cứu Mở?</div>
+                    </div>
+                    <p>Nghiên cứu thông tin là bài toán <strong>dynamic & path-dependent</strong> (phụ thuộc vào manh
+                        mối xuất hiện trong quá trình tìm kiếm). Single-Agent gặp 3 rào cản chí mạng:</p>
+                    <ul class="feature-list" style="margin-top: 1rem;">
+                        <li class="feature-item">
+                            <i class="fa-solid fa-circle-xmark" style="color: var(--accent-rose);"></i>
+                            <div><strong>Tràn Context Window & Mất Thông Tin (Distraction):</strong> Khi đọc hàng chục
+                                trang web, context bị nhiễu làm suy giảm khả năng suy luận gốc.</div>
+                        </li>
+                        <li class="feature-item">
+                            <i class="fa-solid fa-circle-xmark" style="color: var(--accent-rose);"></i>
+                            <div><strong>Search Tuần Tự Quá Chậm:</strong> Single-Agent tìm từng link một, mất nhiều giờ
+                                đồng hồ cho một báo cáo tổng hợp.</div>
+                        </li>
+                        <li class="feature-item">
+                            <i class="fa-solid fa-circle-xmark" style="color: var(--accent-rose);"></i>
+                            <div><strong>Đường Mòn Suy Nghĩ (Path Dependency):</strong> Khi đi sai hướng ban đầu,
+                                Single-Agent rất khó tự rẽ sang nhánh khác.</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fa-solid fa-bolt"></i></div>
+                        <div class="card-title">Bản Chất Của Multi-Agent: Tìm Kiếm Là Nén (Compression)</div>
+                    </div>
+                    <p>Đội ngũ Multi-Agent giải quyết bài toán bằng cách <strong>phân tách trách nhiệm (Separation of
+                            Concerns)</strong> và mở rộng dung lượng Token:</p>
+                    <div class="callout tip">
+                        <strong>Phát hiện từ Anthropic:</strong> 80% sự khác biệt về hiệu suất agent đến từ <strong>Tổng
+                            số Token chi ra</strong>. Multi-Agent cung cấp nhiều Context Window độc lập, cho phép nén
+                        thông tin từ hàng trăm nguồn dữ liệu mà không làm quá tải Trưởng Nhóm.
+                    </div>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">
+                        Mỗi Subagent hoạt động trong không gian suy luận riêng, lọc loại các dữ liệu rác, chỉ trả về kết
+                        quả đã được tinh lọc cho Lead Agent.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: KIẾN TRÚC MULTI-AGENT -->
+        <div id="tab-architecture" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon"><i class="fa-solid fa-diagram-project"></i></div>
+                    <div class="card-title">Mô Hình Orchestrator-Worker (Lead Agent + Specialized Subagents)</div>
+                </div>
+
+                <!-- Visual Diagram -->
+                <div class="arch-diagram">
+                    <div class="orchestrator-box">
+                        <h4 style="color: var(--text-primary); font-size: 1.1rem;"><i class="fa-solid fa-crown"
+                                style="color: var(--accent-amber);"></i> LEAD AGENT (Orchestrator - Claude Opus 4)</h4>
+                        <p style="font-size: 0.875rem; color: var(--accent-indigo); margin-top: 6px; font-weight: 600;">
+                            Phân tích yêu cầu ➔ Lập kế hoạch ➔ Phân rã nhiệm vụ ➔ Tổng hợp báo cáo cuối</p>
+                    </div>
+
+                    <div class="connector-line"></div>
+
+                    <div
+                        style="text-align: center; color: var(--accent-cyan); font-size: 0.85rem; font-weight: 700; margin: 6px 0;">
+                        SPAWN PARALLEL SUBAGENTS (Interleaved Thinking + MCP Tools)
+                    </div>
+
+                    <div class="worker-grid">
+                        <div class="worker-box">
+                            <h5 style="color: var(--text-primary);"><i class="fa-solid fa-magnifying-glass"></i>
+                                Subagent 1: Web Research</h5>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Tìm thông tin tài
+                                chính & báo cáo ngành</p>
+                        </div>
+                        <div class="worker-box">
+                            <h5 style="color: var(--text-primary);"><i class="fa-solid fa-database"></i> Subagent 2:
+                                Internal Docs</h5>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Tra cứu Google
+                                Drive / Slack / MCP</p>
+                        </div>
+                        <div class="worker-box">
+                            <h5 style="color: var(--text-primary);"><i class="fa-solid fa-code-compare"></i> Subagent 3:
+                                Competitors</h5>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Đối chiếu tính năng
+                                đối thủ</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Thành Phần</th>
+                                <th>Vai Trò Kiến Trúc</th>
+                                <th>Mô Hình Sử Dụng</th>
+                                <th>Cơ Chế Phối Hợp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Lead Agent (Chủ Trì)</strong></td>
+                                <td>Phân rã câu hỏi, lập chiến lược, phân bổ nguồn lực, duyệt kết quả.</td>
+                                <td>Claude Opus 4 / GPT-4o</td>
+                                <td>Extended Thinking (Suy luận sâu trước khi giao việc)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Worker Subagents (Thực Thi)</strong></td>
+                                <td>Thực hiện tìm kiếm chuyên sâu, dùng tool song song, tóm tắt thông tin.</td>
+                                <td>Claude Sonnet 4 / Haiku</td>
+                                <td>Interleaved Thinking (Suy luận xen kẽ giữa các lượt gọi Tool)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>MCP Tools Layer</strong></td>
+                                <td>Cung cấp cổng kết nối chuẩn hóa với Web Search, Drive, Databases, APIs.</td>
+                                <td>Model Context Protocol (MCP)</td>
+                                <td>Self-Improving Tool Ergonomics (AI tự cải thiện prompt Tool)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: 8 QUY TẮC PROMPTING & SCALING -->
+        <div id="tab-prompting" class="tab-content">
+            <div class="section-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fa-solid fa-lightbulb"></i></div>
+                        <div class="card-title">8 Quy Tắc Prompt Engineering Hàng Đầu</div>
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <i class="fa-solid fa-1"></i>
+                            <div><strong>Think like your agents:</strong> Mô phỏng chạy thử trên Console để nhìn rõ các
+                                điểm gãy suy luận của Agent trước khi viết prompt dài.</div>
+                        </li>
+                        <li class="feature-item">
+                            <i class="fa-solid fa-2"></i>
+                            <div><strong>Dạy Orchestrator cách giao việc chi tiết:</strong> Đừng giao lệnh chung chung
+                                ("nghiên cứu về chip"). Phải giao rõ: Mục tiêu, Định dạng đầu ra, Ranh giới không trùng
+                                lặp.</div>
+                        </li>
+                        <li class="feature-item">
+                            <i class="fa-solid fa-3"></i>
+                            <div><strong>Scale ngân sách theo độ phức tạp:</strong> Đặt quy tắc: Tra cứu đơn giản = 1
+                                agent (3-10 calls); So sánh = 2-4 subagents (10-15 calls); Nghiên cứu sâu = 10+
+                                subagents.</div>
+                        </li>
+                        <li class="feature-item">
+                            <i class="fa-solid fa-4"></i>
+                            <div><strong>Thiết kế Tool & Mô tả Tool chuẩn hóa (MCP):</strong> Mô tả Tool mù mờ làm Agent
+                                đi sai hướng. Cần có Heuristic hướng dẫn ưu tiên chọn Tool nào cho đúng ngữ cảnh.</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fa-solid fa-robot"></i></div>
+                        <div class="card-title">Nâng Cao: Self-Improving Tools & Parallel Calling</div>
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <i class="fa-solid fa-5"></i>
+                            <div><strong>Để AI tự cải thiện Prompt Tool:</strong> Sử dụng 1 Agent chuyên test Tool. Nó
+                                thử gọi tool lỗi hàng chục lần ➔ Tự viết lại mô tả Tool ➔ <strong>Giảm 40% thời gian
+                                    thực thi của các agent sau!</strong></div>
+                        </li>
+                        <li class="feature-item">
+                            <i class="fa-solid fa-6"></i>
+                            <div><strong>Chiến lược "Rộng trước, Hẹp sau":</strong> Đẩy agent tìm kiếm từ khóa rộng
+                                trước để nắm bức tranh toàn cảnh, sau đó mới thu hẹp vào các chi tiết cụ thể.</div>
+                        </li>
+                        <li class="feature-item">
+                            <i class="fa-solid fa-7"></i>
+                            <div><strong>Extended & Interleaved Thinking:</strong> Cho phép Agent dùng không gian suy
+                                luận nháp (Scratchpad) để đánh giá chất lượng nguồn tin sau mỗi lần gọi Tool.</div>
+                        </li>
+                        <li class="feature-item">
+                            <i class="fa-solid fa-8"></i>
+                            <div><strong>Gọi Tool & Subagent Song Song (Parallel Execution):</strong> Cho phép Lead
+                                Agent kích hoạt 3-5 Subagents cùng lúc và Subagent gọi 3+ Tools cùng lúc ➔ <strong>Cắt
+                                    giảm 90% thời gian chờ.</strong></div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: ĐÁNH GIÁ (EVALS) & LLM-JUDGE -->
+        <div id="tab-evals" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon"><i class="fa-solid fa-vial-circle-check"></i></div>
+                    <div class="card-title">Khung Đánh Giá Hiệu Suất Multi-Agent (Agent Evals)</div>
+                </div>
+
+                <div class="callout warning">
+                    <strong>Thách thức:</strong> Multi-Agent là hệ thống phi định hình (Non-deterministic). Hai lần chạy
+                    cùng prompt có thể đi 2 đường khác nhau nhưng đều ra kết quả đúng. Do đó <strong>không thể kiểm tra
+                        cứng các bước trung gian</strong>, mà phải đánh giá Kết Quả + Tính Hợp Lý của Quy Trình!
+                </div>
+
+                <div class="section-grid" style="margin-top: 1.5rem;">
+                    <div
+                        style="background: var(--bg-card-hover); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <h4 style="color: var(--accent-indigo); margin-bottom: 0.75rem;"><i
+                                class="fa-solid fa-gavel"></i> LLM-as-Judge chuẩn hóa</h4>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Sử dụng 1 prompt LLM Judge duy nhất
+                            để chấm điểm từ 0.0 - 1.0 kèm Pass/Fail dựa trên tiêu chí:</p>
+                        <ul
+                            style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; padding-left: 1.2rem;">
+                            <li><strong>Factual Accuracy:</strong> Độ chính xác của thông tin so với nguồn.</li>
+                            <li><strong>Citation Accuracy:</strong> Trích dẫn nguồn có đúng nội dung không.</li>
+                            <li><strong>Completeness:</strong> Trả lời đầy đủ các vế của câu hỏi không.</li>
+                            <li><strong>Source Quality:</strong> Ưu tiên nguồn chính thống thay vì nông trại SEO rác.
+                            </li>
+                            <li><strong>Tool Efficiency:</strong> Có lãng phí số lần gọi Tool không.</li>
+                        </ul>
+                    </div>
+
+                    <div
+                        style="background: var(--bg-card-hover); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <h4 style="color: var(--accent-emerald); margin-bottom: 0.75rem;"><i
+                                class="fa-solid fa-filter"></i> Quy Tắc Test Mẫu Nhỏ (Small Evals)</h4>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">
+                            Đừng chờ xây dựng bộ test 500 câu hỏi! Hãy bắt đầu ngay với <strong>20 câu hỏi thực tế đại
+                                diện</strong>. Ở giai đoạn đầu, các cải tiến prompt mang lại hiệu quả rất lớn (tăng từ
+                            30% lên 80%), hoàn toàn có thể nhận biết ngay trên tập test nhỏ.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: TRIỂN KHAI PRODUCTION & RESILIENCE -->
+        <div id="tab-production" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                    <div class="card-title">Kỹ Thuật Vận Hành Production 24/7 Bền Vững</div>
+                </div>
+
+                <pre><code>// Mô Hình Stateful Resilience & Resumable Checkpoints
+1. State Checkpointing: Lưu trạng thái của từng Subagent vào Redis / Database sau mỗi lượt Tool call.
+2. Graceful Error Recovery: Khi 1 Tool lỗi (500/404), thông báo trực tiếp lỗi đó lại cho Agent để Agent tự đổi phương án thay vì crash luồng.
+3. Rainbow Deployments: Giữ các phiên bản Agent cũ tiếp tục chạy cho tới khi hoàn tất task, chỉ đẩy traffic mới sang Agent phiên bản mới (Kubernetes / Canary).</code></pre>
+
+                <div class="section-grid" style="margin-top: 1.5rem;">
+                    <div class="card" style="background: var(--bg-card-hover);">
+                        <h4 style="color: var(--accent-amber);"><i class="fa-solid fa-clock-rotate-left"></i> Khôi Phục
+                            Khi Lỗi (Durable Execution)</h4>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 8px;">
+                            Các tác vụ Multi-Agent kéo dài vài phút. Nếu crash giữa chừng, tuyệt đối không restart từ
+                            đầu (tốn tiền & khó chịu cho user). Hệ thống phải cho phép **Resume từ checkpoint gần
+                            nhất**.
+                        </p>
+                    </div>
+                    <div class="card" style="background: var(--bg-card-hover);">
+                        <h4 style="color: var(--accent-indigo);"><i class="fa-solid fa-eye"></i> Observability & Tracing
+                        </h4>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 8px;">
+                            Cần có Full Tracing (LangSmith / Phoenix / Custom Trace) để quan sát luồng quyết định của
+                            Lead Agent và Subagents mà không vi phạm quyền riêng tư dữ liệu người dùng.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>Báo Cáo Nghiên Cứu Multi-Agent Systems SOP • Đội Ngũ Antigravity AI Engineering 2026</p>
+        </footer>
+    </div>
+
+    <script>
+        function openTab(evt, tabId) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            tablinks = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            document.getElementById(tabId).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        function toggleTheme() {
+            const htmlNode = document.documentElement;
+            const currentTheme = htmlNode.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+            htmlNode.setAttribute('data-theme', newTheme);
+
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+
+            if (newTheme === 'light') {
+                themeIcon.className = 'fa-solid fa-sun';
+                themeText.innerText = 'Nền Sáng';
+            } else {
+                themeIcon.className = 'fa-solid fa-moon';
+                themeText.innerText = 'Nền Tối';
+            }
+        }
+    </script>
+
+</body>
+
+</html>

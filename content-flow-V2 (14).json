@@ -1,0 +1,2601 @@
+{
+  "name": "content-flow-V2",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1e-MrG7aAD8q8Lu5yiue5Y6_XDTtqjtGbZWAxAxvwILM",
+          "mode": "list",
+          "cachedResultName": "Content_Gà Ai Cập",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1e-MrG7aAD8q8Lu5yiue5Y6_XDTtqjtGbZWAxAxvwILM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1045940223,
+          "mode": "list",
+          "cachedResultName": "Content Selector",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1e-MrG7aAD8q8Lu5yiue5Y6_XDTtqjtGbZWAxAxvwILM/edit#gid=1045940223"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        112,
+        560
+      ],
+      "id": "a5e754e4-e4bb-481f-b2ca-efbc3de45b16",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4qYXVO3KrkX5V1XQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        560
+      ],
+      "id": "e307ba83-f2cd-4896-ae1b-40121ca5cf89",
+      "name": "Tạo Content"
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.all();\nlet lastValidData = {};\n\n// Danh sách các cột chính cần kế thừa từ dòng trước nếu dòng hiện tại để trống\nconst MASTER_FIELDS = [\n  \"Mục đích chính\",\n  \"Thông tin thương hiệu/sản phẩm/dịch vụ/USP\",\n  \"Chân dung & Insight khách hàng\",\n  \"Kênh triển khai\",\n  \"Mục tiêu kinh doanh/marketing\",\n  \"Mục tiêu đầu ra\",\n  \"Định dạng nội dung\",\n  \"Độ dài nội dung\",\n  \"Số phiên bản nội dung\",\n  \"Công thức nội dung (Copywriting formula)\",\n  \"Văn phong\",\n  \"Văn phong & Giọng điệu\",\n  \"Hành động mong muốn (CTA)\",\n  \"Tỷ lệ Văn nói - Văn viết\",\n  \"Tỷ lệ Định tính - Định lượng\",\n  \"Số liệu - bằng chứng uy tín\",\n  \"Prompt bổ sung / luật riêng\",\n  \"Kho Media Drive\"\n];\n\n// Hàm quét lấy đại diện Chủ đề phễu từ tất cả các cột phễu (K, L, M, N)\nfunction getFunnelTopic(row) {\n  const keys = Object.keys(row);\n  const IGNORE_VALUES = [\"tùy ý\", \"200 từ\", \"300 từ\", \"caption\", \"bài viết\"];\n\n  for (const k of keys) {\n    const kLower = k.toLowerCase().trim();\n    if (\n      kLower === \"col_14\" ||\n      kLower === \"col_13\" ||\n      kLower === \"col_12\" ||\n      kLower === \"col_11\" ||\n      kLower.includes(\"chủ đề phễu\") ||\n      kLower.includes(\"tuyến nội dung\") ||\n      kLower.includes(\"phễu lạnh\") ||\n      kLower.includes(\"phễu ấm\") ||\n      kLower.includes(\"phễu nóng\")\n    ) {\n      const val = row[k];\n      if (val !== undefined && val !== null) {\n        const strVal = String(val).trim();\n        if (\n          strVal !== \"\" &&\n          !strVal.startsWith(\"http\") &&\n          !strVal.startsWith(\"[Tùy chọn]\") &&\n          !IGNORE_VALUES.includes(strVal.toLowerCase())\n        ) {\n          return strVal;\n        }\n      }\n    }\n  }\n  return \"\";\n}\n\nreturn allItems.map((item) => {\n  const row = item.json;\n\n  // 1. Cập nhật kế thừa các cột master\n  MASTER_FIELDS.forEach((field) => {\n    const val = row[field];\n    if (val !== undefined && val !== null && String(val).trim() !== \"\") {\n      lastValidData[field] = String(val).trim();\n    }\n  });\n\n  // 2. Kế thừa Tiêu chuẩn ảnh 1, 2, 3\n  const tc1 = row[\"Tiêu chuẩn ảnh 1\"] || \"\";\n  const tc2 = row[\"Tiêu chuẩn ảnh 2\"] || row[\"col_30\"] || \"\";\n  const tc3 = row[\"Tiêu chuẩn ảnh 3\"] || row[\"col_31\"] || \"\";\n\n  if (tc1) lastValidData[\"Tiêu chuẩn ảnh 1\"] = String(tc1).trim();\n  if (tc2) lastValidData[\"Tiêu chuẩn ảnh 2\"] = String(tc2).trim();\n  if (tc3) lastValidData[\"Tiêu chuẩn ảnh 3\"] = String(tc3).trim();\n\n  // 3. Kế thừa Chủ đề phễu\n  const currentFunnel = getFunnelTopic(row);\n  if (currentFunnel !== \"\") {\n    lastValidData[\"Chủ đề phễu\"] = currentFunnel;\n  }\n\n  // 4. Tạo JSON đầu ra\n  const updatedRow = { ...row };\n\n  MASTER_FIELDS.forEach((field) => {\n    const currentVal = row[field];\n    updatedRow[field] = (currentVal !== undefined && currentVal !== null && String(currentVal).trim() !== \"\")\n      ? String(currentVal).trim()\n      : (lastValidData[field] || \"\");\n  });\n\n  // Map chuẩn & dọn dẹp key Tiêu chuẩn ảnh (xoá col_30, col_31)\n  updatedRow[\"Tiêu chuẩn ảnh 1\"] = tc1 ? String(tc1).trim() : (lastValidData[\"Tiêu chuẩn ảnh 1\"] || \"\");\n  updatedRow[\"Tiêu chuẩn ảnh 2\"] = tc2 ? String(tc2).trim() : (lastValidData[\"Tiêu chuẩn ảnh 2\"] || \"\");\n  updatedRow[\"Tiêu chuẩn ảnh 3\"] = tc3 ? String(tc3).trim() : (lastValidData[\"Tiêu chuẩn ảnh 3\"] || \"\");\n\n  delete updatedRow[\"col_30\"];\n  delete updatedRow[\"col_31\"];\n\n  // Gán key Chủ đề phễu (Vẫn GIỮ LẠI các cột gốc col_11, col_12, col_13, col_14)\n  updatedRow[\"Chủ đề phễu\"] = currentFunnel !== \"\" \n    ? currentFunnel \n    : (lastValidData[\"Chủ đề phễu\"] || \"\");\n\n  // Đồng bộ Văn phong\n  const vpVal = updatedRow[\"Văn phong\"] || updatedRow[\"Văn phong & Giọng điệu\"] || \"\";\n  updatedRow[\"Văn phong\"] = vpVal;\n  updatedRow[\"Văn phong & Giọng điệu\"] = vpVal;\n\n  return {\n    json: updatedRow\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        416
+      ],
+      "id": "7106101b-ee3b-4287-b48f-174866582df2",
+      "name": "Xử lý gom các nội dung trùng"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.6-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.6-flash",
+          "cachedResultUrl": ""
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=# ROLE: Senior B2B Content Strategist & Master Copywriter cho \"Ecolar\"\n\nBạn là chuyên gia Content Marketing & Copywriting chuyên sâu về sản phẩm **Gà Ai Cập Vằn siêu trứng** của thương hiệu **Ecolar**.\n\nNhiệm vụ của bạn là sáng tạo **03 bài viết Facebook hoàn chỉnh** dựa trên toàn bộ dữ liệu đầu vào bên dưới. Nội dung phải bám sát brief, đúng đối tượng khách hàng, đúng mục tiêu marketing và tuân thủ đầy đủ các quy tắc được quy định trong prompt này.\n\nƯu tiên hàng đầu:\n\n* Nội dung dễ đọc, dễ hiểu, gần gũi với người chăn nuôi.\n* Có sức thuyết phục nhưng không quảng cáo quá đà.\n* Khai thác đúng insight, rào cản và nhu cầu thực tế của khách hàng.\n* Sử dụng dữ liệu, USP và bằng chứng được cung cấp để tăng độ tin cậy.\n* Không tự suy diễn hoặc tạo ra số liệu, cam kết, chính sách hay đặc tính sản phẩm khi dữ liệu đầu vào không cung cấp.\n\n---\n\n## 🎯 ĐỊNH HƯỚNG NỘI DUNG TỪ GOOGLE SHEET (INPUT BRIEF)\n\n* **Mục đích chính:** {{ $json[\"Mục đích chính\"] }}\n* **Thông tin thương hiệu/sản phẩm/dịch vụ/USP:** {{ $json[\"Thông tin thương hiệu/sản phẩm/dịch vụ/USP\"] }}\n* **Ý tưởng / Hook gợi ý:** {{ $json[\"Ý tưởng/Hook\"] }}\n* **Kênh triển khai:** {{ $json[\"Kênh triển khai\"] }}\n* **Chân dung & Insight khách hàng:** {{ $json[\"Chân dung & Insight khách hàng\"] }}\n* **Mục tiêu kinh doanh/marketing:** {{ $json[\"Mục tiêu kinh doanh/marketing\"] }}\n* **Mục tiêu đầu ra:** {{ $json[\"Mục tiêu đầu ra\"] }}\n* **Định dạng nội dung:** {{ $json[\"Định dạng nội dung\"] }}\n* **Độ dài nội dung:** {{ $json[\"Độ dài nội dung\"] || \"300 từ\" }}\n* **Số phiên bản nội dung:** {{ $json[\"Số phiên bản nội dung\"] || \"3\" }}\n* **Chủ đề phễu:** {{ $json[\"Chủ đề phễu\"] }}, {{ $json.col_12 }},{{ $json.col_13 }}\n* **Thông điệp chính:** {{ $json[\"Thông điệp chính\"] }}\n* **Thông điệp phụ:** {{ $json[\"Thông điệp phụ\"] }}\n* **Số liệu & Bằng chứng uy tín:** {{ $json[\"Số liệu - bằng chứng uy tín\"] }}\n* **Prompt bổ sung / Luật riêng:** {{ $json[\"Prompt bổ sung / luật riêng\"] }}\n\n---\n\n## ⚙️ BỘ QUY TẮC NGHỆ THUẬT COPYWRITING (BẮT BUỘC TUÂN THỦ)\n\n### 1. CÔNG THỨC NỘI DUNG\n\n**Công thức được chọn:** {{ $json[\"Công thức nội dung (Copywriting formula)\"] || \"PAS\" }}\n\nHãy đọc và xác định số lượng công thức Copywriting được truyền vào trường dữ liệu trên.\n\n* Nếu dữ liệu chứa **03 công thức khác nhau**, hãy sử dụng lần lượt từng công thức cho từng Option:\n\n  * Option 1 → Công thức thứ nhất.\n  * Option 2 → Công thức thứ hai.\n  * Option 3 → Công thức thứ ba.\n\n* Nếu dữ liệu chỉ chứa **01 công thức**, cả 03 Option đều sử dụng công thức đó nhưng phải triển khai theo **03 góc tiếp cận khác nhau**, tránh lặp lại cách mở bài, lập luận và diễn đạt.\n\n* Nếu dữ liệu chứa **02 công thức**, sử dụng lần lượt 02 công thức cho Option 1 và Option 2; Option 3 sử dụng lại công thức phù hợp nhất với mục tiêu nội dung nhưng phải triển khai theo một góc nhìn khác.\n\nPhải hiểu đúng cấu trúc của từng công thức, ví dụ:\n\n* PAS → Problem – Agitate – Solution.\n* AIDA → Attention – Interest – Desire – Action.\n* BAB → Before – After – Bridge.\n* 4P → Picture – Promise – Prove – Push.\n\nKhông cần ghi tên hoặc các bước của công thức vào bài viết. Công thức chỉ dùng làm **khung tư duy và cấu trúc triển khai nội dung**.\n\n### 2. TÊN THƯƠNG HIỆU & XƯNG HÔ\n\nTuyệt đối chỉ sử dụng tên **Ecolar** như một danh từ độc lập.\n\nKHÔNG sử dụng các cách gọi như:\n\n* \"Nông nghiệp Ecolar\"\n* \"Công ty Ecolar\"\n* \"Nông Nghiệp Ecolar\"\n* Hoặc tự ý mở rộng tên thương hiệu theo bất kỳ hình thức nào khác.\n\nCách xưng hô:\n\n* Thương hiệu: \"Ecolar\" hoặc \"chúng tôi\".\n* Khách hàng: \"bà con\", \"chủ trang trại\", \"anh/chị\" tùy ngữ cảnh.\n\nCách xưng hô phải tự nhiên, thân thiện và tôn trọng.\n\n### 3. VĂN PHONG & GIỌNG ĐIỆU\n\n{{ $json[\"Văn phong & Giọng điệu\"] || $json[\"Văn phong\"] || \"Chuyên nghiệp, tin cậy\" }}\n\nGiọng văn cần phù hợp với người chăn nuôi thực tế, tránh:\n\n* Ngôn ngữ quá hàn lâm.\n* Câu chữ sáo rỗng.\n* Quảng cáo phô trương.\n* Các tuyên bố tuyệt đối khi không có bằng chứng.\n* Cách diễn đạt máy móc, khuôn mẫu hoặc mang cảm giác nội dung do AI tạo ra.\n\n### 4. ICON & THẨM MỸ\n\nSử dụng khoảng **3–5 icon phù hợp ( hoặc nhiều hơn trong các trường hợp đặc biệt) cho tổng thể mỗi bài viết**.\n\nƯu tiên sử dụng icon để:\n\n* Làm nổi bật lợi ích.\n* Phân tách các ý quan trọng.\n* Trình bày các nội dung dạng liệt kê\n* Nhấn mạnh CTA hoặc thông tin đáng chú ý.\n\nKhông đặt icon dày đặc ở mọi câu hoặc mọi đoạn.\n\n### 5. KHÔNG GÁN NHÃN AI\n\nTuyệt đối KHÔNG chèn các câu hoặc nhãn như:\n\n* \"Nội dung do AI tạo\"\n* \"Nội dung do AI sáng tạo\"\n* \"AI generated\"\n* Hoặc bất kỳ cách diễn đạt tương tự nào.\n\n### 6. TỶ LỆ VĂN NÓI – VĂN VIẾT\n\n{{ $json[\"Tỷ lệ Văn nói - Văn viết\"] || \"50% Nói - 50% Viết\" }}\n\nCân bằng giữa:\n\n* Sự gần gũi, tự nhiên, dễ tiếp nhận của văn nói.\n* Sự rõ ràng, chuyên nghiệp và có cấu trúc của văn viết.\n\nKhông cố tình sử dụng khẩu ngữ quá mức.\n\n### 7. TỶ LỆ ĐỊNH TÍNH – ĐỊNH LƯỢNG\n\n{{ $json[\"Tỷ lệ Định tính - Định lượng\"] || \"50% Định tính - 50% Định lượng\" }}\n\nƯu tiên kết hợp:\n\n* Định tính: lợi ích, cảm xúc, trải nghiệm, nỗi lo, sự an tâm, hiệu quả thực tế.\n* Định lượng: số liệu, tỷ lệ, thời gian, năng suất hoặc bằng chứng cụ thể.\n\n**QUY TẮC QUAN TRỌNG:** Chỉ được sử dụng số liệu có trong dữ liệu đầu vào. Tuyệt đối không tự tạo số liệu để đáp ứng tỷ lệ định lượng.\n\n### 8. HÀNH ĐỘNG MONG MUỐN (CTA)\n\n{{ $json[\"Hành động mong muốn (CTA)\"] }}\n\nCTA phải được lồng ghép tự nhiên ở cuối bài, phù hợp với:\n\n* Giai đoạn phễu.\n* Mục tiêu nội dung.\n* Insight khách hàng.\n* Hành động mong muốn được cung cấp.\n\nKhông sử dụng CTA quá ép mua nếu mục tiêu bài viết đang ở TOFU hoặc MOFU.\n\n---\n\n## 📐 ĐỊNH HƯỚNG 03 OPTION\n\nPhải tạo đủ **03 Option**.\n\nCả 03 Option cùng bám sát:\n\n* Brief đầu vào.\n* Thông điệp chính.\n* Thông điệp phụ.\n* Chủ đề phễu.\n* Insight khách hàng.\n* USP.\n* Mục tiêu marketing.\n* Công thức Copywriting tương ứng.\n\nTuy nhiên, **03 Option phải khác nhau rõ rệt về góc tiếp cận**, không được chỉ thay đổi vài câu hoặc đảo thứ tự đoạn văn.\n\n### OPTION 1 – CHUYÊN GIA / KỸ THUẬT\n\nTập trung vào:\n\n* Kiến thức.\n* Logic.\n* Phân tích vấn đề.\n* Đặc tính sản phẩm.\n* Số liệu và bằng chứng.\n* Hiệu quả chăn nuôi.\n\nMục tiêu là giúp người đọc cảm thấy nội dung **có cơ sở, đáng tin và có giá trị thực tế**.\n\n### OPTION 2 – CẢM XÚC / TRẢI NGHIỆM THỰC TẾ\n\nTập trung vào:\n\n* Nỗi lo.\n* Rào cản.\n* Tình huống thực tế.\n* Trải nghiệm của người chăn nuôi.\n* Sự thay đổi trước và sau khi vấn đề được giải quyết.\n\nMục tiêu là khiến người đọc **thấy chính hoàn cảnh của mình trong bài viết**.\n\n### OPTION 3 – THƯƠNG MẠI / B2B ACTION\n\nTập trung vào:\n\n* Hiệu quả đầu tư.\n* Lợi ích kinh tế.\n* Khả năng triển khai.\n* Giảm rủi ro.\n* Lợi thế sản phẩm.\n* Lý do nên cân nhắc hành động.\n\nMục tiêu là thúc đẩy khách hàng **tiến gần hơn tới quyết định liên hệ, tìm hiểu hoặc mua hàng**, nhưng vẫn phải phù hợp với giai đoạn phễu.\n\n---\n\n## 🧠 QUY TẮC XỬ LÝ THÔNG TIN\n\nTrước khi viết, hãy ngầm phân tích dữ liệu theo thứ tự:\n\n**Insight khách hàng → Rào cản/Nhu cầu → Thông điệp chính → USP/Bằng chứng → Công thức Copywriting → Chủ đề phễu → CTA.**\n\nSau đó mới triển khai nội dung.\n\nƯu tiên thông tin theo thứ tự:\n\n1. Prompt bổ sung / Luật riêng.\n2. Thông điệp chính.\n3. Chân dung & Insight khách hàng.\n4. Mục tiêu kinh doanh/marketing.\n5. Chủ đề phễu.\n6. USP và bằng chứng.\n7. Thông điệp phụ.\n8. Ý tưởng/Hook gợi ý.\n\nNếu một trường dữ liệu bị trống, hãy bỏ qua trường đó và tiếp tục viết dựa trên những dữ liệu còn lại.\n\n**Tuyệt đối không tự bịa thêm:**\n\n* Số liệu.\n* Chính sách.\n* Cam kết.\n* Chứng nhận.\n* Giá bán.\n* Tỷ lệ.\n* Năng suất.\n* Thời gian sinh trưởng.\n* Hiệu quả kinh tế.\n* Phản hồi khách hàng.\n* Thông tin kỹ thuật chưa được cung cấp.\n\n---\n\n## ⚠️ LƯU Ý ĐỊNH DẠNG BÀI VIẾT\n\n* Mỗi bài viết chỉ bao gồm **HOOK và NỘI DUNG bài viết**.\n* KHÔNG chèn các dòng phân loại như `[Chuyên gia / Kỹ thuật]`, `[Cảm xúc]`, `[B2B]` vào trường `content`.\n* KHÔNG chèn tên công thức Copywriting vào bài.\n* KHÔNG chèn các nhãn như Problem, Agitate, Solution, Attention, Interest...\n* KHÔNG chèn đoạn tóm tắt `summary` vào content.\n* Viết bài hoàn chỉnh từ A–Z.\n* Trình bày xuống dòng hợp lý, dễ đọc trên Facebook.\n* Hook phải đặt đầu bài và được viết IN HOA.\n* Không lặp lại nguyên văn Hook trong phần `content`.\n* 🚫 KHÔNG tự thêm Hashtag vào cuối bài. Hashtag phải trả về ô riêng trong JSON.\n* 🚫 KHÔNG tự thêm thông tin liên hệ hoặc chữ ký vào bài. Block thông tin liên hệ sẽ được ghép tự động sau.\n\n---\n\n## ⚠️ LƯU Ý VĂN PHONG BÀI VIẾT\n\n* Viết dễ hiểu, tự nhiên và gần gũi với khách hàng mục tiêu.\n* Ưu tiên câu ngắn và trung bình, hạn chế câu quá dài.\n* Không dùng thuật ngữ chuyên môn nếu không thực sự cần thiết.\n* Nếu phải dùng thuật ngữ chuyên môn, cần diễn đạt sao cho người chăn nuôi phổ thông vẫn hiểu.\n* Hạn chế lặp lại tên \"Ecolar\" quá nhiều lần.\n* Không lặp lại cùng một luận điểm nhiều lần trong một bài.\n* Không viết theo kiểu liệt kê lợi ích một cách khô cứng.\n* Không sử dụng các câu quảng cáo sáo rỗng như \"lựa chọn hoàn hảo\", \"chất lượng hàng đầu\", \"số 1 thị trường\" nếu không có dữ liệu chứng minh.\n* Ưu tiên cách diễn đạt cụ thể, thực tế và gắn với lợi ích của người chăn nuôi.\n\n---\n\n## 🔥 QUY TẮC VIẾT HOOK\n\nMỗi Option phải có một Hook riêng biệt.\n\nHook cần:\n\n* Ngắn gọn.\n* Dễ hiểu ngay khi đọc.\n* Chạm đúng insight hoặc lợi ích.\n* Tạo lý do để người đọc tiếp tục đọc.\n* Phù hợp với nội dung phía sau.\n\n03 Hook không được sử dụng cùng một cấu trúc câu.\n\nKhông giật tít quá mức, không gây hiểu nhầm và không đưa ra lời hứa vượt quá dữ liệu được cung cấp.\n\n---\n\n## 🔍 KIỂM TRA TRƯỚC KHI OUTPUT\n\nTrước khi trả kết quả, hãy tự kiểm tra:\n\n1. Đã đủ 03 Option chưa?\n2. Mỗi Option đã sử dụng đúng công thức Copywriting tương ứng chưa?\n3. 03 Option đã khác nhau rõ rệt về góc tiếp cận chưa?\n4. Nội dung đã bám sát thông điệp chính chưa?\n5. Nội dung đã phù hợp với chủ đề phễu chưa?\n6. Có số liệu nào bị tự suy diễn hoặc bịa thêm không?\n7. CTA đã đúng với hành động mong muốn chưa?\n8. Có sử dụng sai tên thương hiệu không?\n9. Có hashtag hoặc thông tin liên hệ bị chèn vào `content` không?\n10. Output cuối cùng có phải JSON hợp lệ không?\n\nNếu phát hiện lỗi, hãy tự sửa trước khi trả kết quả.\n\n---\n\n## OUTPUT FORMAT: CHỈ TRẢ VỀ JSON HỢP LỆ (KHÔNG MARKDOWN, KHÔNG TEXT THỪA)\n\n{\n\"option_1\": {\n\"style\": \"Chuyên gia / Kỹ thuật\",\n\"hook\": \"TIÊU ĐỀ IN HOA BÀI 1\",\n\"content\": \"Nội dung bài 1 triển khai chuẩn công thức copywriting được yêu cầu...\"\n},\n\"option_2\": {\n\"style\": \"Cảm xúc / Trải nghiệm thực tế\",\n\"hook\": \"TIÊU ĐỀ IN HOA BÀI 2\",\n\"content\": \"Nội dung bài 2 triển khai chuẩn công thức copywriting được yêu cầu...\"\n},\n\"option_3\": {\n\"style\": \"Thương mại / B2B Action\",\n\"hook\": \"TIÊU ĐỀ IN HOA BÀI 3\",\n\"content\": \"Nội dung bài 3 triển khai chuẩn công thức copywriting được yêu cầu...\"\n},\n\"hashtags\": \"#GaAiCapVan #GaGiongSieuTrung #ChannuoiHieuQua #Ecolar\",\n\"utm_content\": \"fb_b2b_selected_Option\"\n}\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1216,
+        416
+      ],
+      "id": "743d5ad4-8626-4955-a3bb-1b338d3348b9",
+      "name": "Gemini tạo Content",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "E671tlOVPkpeSWrD",
+          "name": "khangvoduy.work"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Node: Code chuẩn hóa 3 Options từ Gemini API để ghi vào Google Sheet\nconst items = $input.all();\n\nreturn items.map((item, index) => {\n  const j = item.json;\n\n  // 1. TRÍCH XUẤT RAW TEXT TỪ GEMINI API OUTPUT\n  let rawText = j.content?.parts?.[0]?.text\n    || j.candidates?.[0]?.content?.parts?.[0]?.text\n    || j.text \n    || j.output \n    || j.message?.content \n    || \"\";\n\n  if (typeof rawText === 'object') {\n    rawText = JSON.stringify(rawText);\n  }\n\n  // Làm sạch Markdown ```json ... ``` nếu Gemini tự bọc\n  const cleanedText = String(rawText)\n    .replace(/```json/gi, '')\n    .replace(/```/g, '')\n    .trim();\n\n  let parsed = {};\n  try {\n    parsed = JSON.parse(cleanedText);\n  } catch (e) {\n    // Nếu parse lỗi thì dùng rawText làm Option 1\n  }\n\n  // 2. LẤY ROW_NUMBER TỪ NODE XỦ LÝ TRƯỚC\n  let rowId = $('Xử lý gom các nội dung trùng').first().json.row_number;\n\n  // 3. LẤY LINK THƯ MỤC ẢNH DEMO (NẾU CÓ)\n  let folderLink = \"\";\n  try {\n    folderLink = $('Tách ảnh từ nhiều link').itemMatching(index)?.json?.drive_folder_link || \"\";\n  } catch (e) {}\n  if (!folderLink) {\n    folderLink = j[\"Kho Media Drive\"] || j[\"Kho Media\"] || j[\"Ảnh Demo\"] || \"\";\n  }\n\n  // 4. BÓC TÁCH NỘI DUNG 3 OPTION & CHUẨN HÓA CÂU TỪ\n  const op1 = parsed.option_1 || {};\n  const op2 = parsed.option_2 || {};\n  const op3 = parsed.option_3 || {};\n  \n  let hashtags = parsed.hashtags || \"#GaAiCapVan #GaGiongSieuTrung #ChannuoiHieuQua #Ecolar\";\n  hashtags = String(hashtags)\n    .replace(/NongNghiepEcolar/gi, \"Ecolar\")\n    .replace(/NongNghiep/gi, \"\")\n    .replace(/#+/g, \"#\")\n    .trim();\n\n  // KHỐI THÔNG TIN LIÊN HỆ CHÈN BỔ SUNG SAU HASHTAG\n  const contactInfo = `-------------------------------------------\nEcolar – Lối sống xanh bền vững\n🌐 Website: https://ecolar.vn/\n📞Hotline: 0868 515 668\n📧Email: lienhe@ecolar.vn\n📘Zalo OA: https://zalo.me/1699772582506373938\n ⓕ Facebook: https://www.facebook.com/Loisongxanhecolar\n▶️Youtube: https://www.youtube.com/@LoiSongXanhEcolar\n🎵Tiktok: https://www.tiktok.com/@gaaicapecolar`;\n\n  // Ghép Hashtags và Thông tin liên hệ\n  const footer = `${hashtags}\\n\\n${contactInfo}`;\n\n  // Hàm định dạng và dọn dẹp từng Option\n  function cleanAndFormat(opObj) {\n    if (!opObj || (typeof opObj === 'object' && Object.keys(opObj).length === 0)) return \"\";\n    if (typeof opObj === 'string') {\n      try { opObj = JSON.parse(opObj); } catch (e) { return opObj; }\n    }\n\n    let hook = opObj.hook || \"\";\n    let body = opObj.content || \"\";\n    if (typeof body === 'object') body = JSON.stringify(body);\n\n    // Gỡ các nhãn HOOK / NỘI DUNG thừa\n    hook = String(hook).replace(/^📌?\\s*HOOK\\s*:\\s*/gi, \"\").replace(/^\\[.*?\\]\\s*/gim, \"\").trim();\n    body = String(body).replace(/^📝?\\s*NỘI DUNG\\s*:\\s*/gi, \"\").replace(/^\\[.*?\\]\\s*/gim, \"\").trim();\n\n    // Ghép Hook & Body\n    let fullText = \"\";\n    if (hook && !body.toLowerCase().includes(hook.toLowerCase())) {\n      const hasEmoji = /^[\\u{1F300}-\\u{1F9FF}\\u{2600}-\\u{26FF}\\u{2700}-\\u{27BF}]/u.test(hook);\n      const hookFormatted = hasEmoji ? hook : `📌 ${hook}`;\n      fullText = `${hookFormatted}\\n\\n${body}`;\n    } else {\n      fullText = body;\n    }\n\n    // Dọn dẹp tên thương hiệu Ecolar chuẩn mực & gỡ nhãn AI\n    fullText = fullText\n      .replace(/\\[\\s*Nội dung (do|được)?\\s*AI\\s*(tạo|sáng tạo|sinh)?\\s*\\]/gi, \"\")\n      .replace(/\\(\\s*Nội dung (do|được)?\\s*AI\\s*(tạo|sáng tạo|sinh)?\\s*\\)/gi, \"\")\n      .replace(/Nội dung (do|được)?\\s*AI\\s*(tạo|sáng tạo|sinh)?/gi, \"\")\n      .replace(/AI-generated\\s*content/gi, \"\")\n      .replace(/Nông\\s+Nghiệp\\s+Ecolar/gi, \"Ecolar\")\n      .replace(/Nông\\s+nghiệp\\s+Ecolar/gi, \"Ecolar\")\n      .replace(/nông\\s+nghiệp\\s+Ecolar/gi, \"Ecolar\")\n      .replace(/Công\\s+ty\\s+Ecolar/gi, \"Ecolar\")\n      .replace(/\\n{3,}/g, \"\\n\\n\")\n      .trim();\n\n    return fullText;\n  }\n\n  const text1 = cleanAndFormat(op1);\n  const text2 = cleanAndFormat(op2);\n  const text3 = cleanAndFormat(op3);\n\n  // 5. CHUẨN HÓA DỮ LIỆU ĐẦU RA CHO CỘT GOOGLE SHEETS\n  return {\n    json: {\n      \"row_number\": rowId,\n      \"Option_1\": text1 ? `${text1}\\n\\n${footer}`.trim() : rawText,\n      \"Option_2\": text2 ? `${text2}\\n\\n${footer}`.trim() : \"\",\n      \"Option_3\": text3 ? `${text3}\\n\\n${footer}`.trim() : \"\",\n      \"Anh_Demo\": folderLink,\n      \"Trạng thái\": \"waiting_review\"\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        416
+      ],
+      "id": "61e8d763-226a-4e5b-beea-13c02aba640a",
+      "name": "Code chuẩn hóa đầu ra1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1e-MrG7aAD8q8Lu5yiue5Y6_XDTtqjtGbZWAxAxvwILM",
+          "mode": "list",
+          "cachedResultName": "Content_Gà Ai Cập",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1e-MrG7aAD8q8Lu5yiue5Y6_XDTtqjtGbZWAxAxvwILM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1045940223,
+          "mode": "list",
+          "cachedResultName": "Content Selector",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1e-MrG7aAD8q8Lu5yiue5Y6_XDTtqjtGbZWAxAxvwILM/edit#gid=1045940223"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.row_number }}",
+            "Option 1 ": "={{ $json.Option_1 }}",
+            "Option 2": "={{ $json.Option_2 }}",
+            "Option 3": "={{ $json.Option_3 }}",
+            "Trạng Thái": "={{ $json['Trạng thái'] }}",
+            "Ảnh Demo": "={{ $json.Anh_Demo }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Mục đích chính",
+              "displayName": "Mục đích chính",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Thông tin thương hiệu/sản phẩm/dịch vụ/USP",
+              "displayName": "Thông tin thương hiệu/sản phẩm/dịch vụ/USP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Ý tưởng/Hook",
+              "displayName": "Ý tưởng/Hook",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Kênh triển khai",
+              "displayName": "Kênh triển khai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Chân dung & Insight khách hàng",
+              "displayName": "Chân dung & Insight khách hàng",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Mục tiêu kinh doanh/marketing",
+              "displayName": "Mục tiêu kinh doanh/marketing",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Mục tiêu đầu ra",
+              "displayName": "Mục tiêu đầu ra",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Định dạng nội dung",
+              "displayName": "Định dạng nội dung",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Độ dài nội dung",
+              "displayName": "Độ dài nội dung",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Số phiên bản nội dung",
+              "displayName": "Số phiên bản nội dung",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Chủ đề phễu",
+              "displayName": "Chủ đề phễu",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Thông điệp chính",
+              "displayName": "Thông điệp chính",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Thông điệp phụ",
+              "displayName": "Thông điệp phụ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Công thức nội dung (Copywriting formula)",
+              "displayName": "Công thức nội dung (Copywriting formula)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Văn phong",
+              "displayName": "Văn phong",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Hành động mong muốn (CTA)",
+              "displayName": "Hành động mong muốn (CTA)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tỷ lệ Văn nói - Văn viết",
+              "displayName": "Tỷ lệ Văn nói - Văn viết",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tỷ lệ Định tính - Định lượng",
+              "displayName": "Tỷ lệ Định tính - Định lượng",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Số liệu - bằng chứng uy tín",
+              "displayName": "Số liệu - bằng chứng uy tín",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Prompt bổ sung / luật riêng",
+              "displayName": "Prompt bổ sung / luật riêng",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Option 1 ",
+              "displayName": "Option 1 ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Option 2",
+              "displayName": "Option 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Option 3",
+              "displayName": "Option 3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Duyệt Option",
+              "displayName": "Duyệt Option",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Trạng Thái",
+              "displayName": "Trạng Thái",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Kho Media Drive",
+              "displayName": "Kho Media Drive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tiêu chuẩn ảnh 1",
+              "displayName": "Tiêu chuẩn ảnh 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tiêu chuẩn ảnh 2",
+              "displayName": "Tiêu chuẩn ảnh 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tiêu chuẩn ảnh 3",
+              "displayName": "Tiêu chuẩn ảnh 3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Ảnh Demo",
+              "displayName": "Ảnh Demo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1920,
+        416
+      ],
+      "id": "1c109fff-5e3b-45ac-ae41-9563b3e9c8e7",
+      "name": "Thêm Nội Dung AI Gen vào Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4qYXVO3KrkX5V1XQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Node: Lấy Option được chọn + Format Nội Dung + Lấy Folder ID Kho Media Drive\nreturn $input.all().map((item, index) => {\n  const row = item.json;\n  const rowId = row[\"row_number\"] || row[\"ID\"] || (index + 5);\n  const keys = Object.keys(row);\n  \n  // Hàm trợ giúp tìm tên cột linh hoạt (tránh lỗi viết hoa/thường hoặc thừa dấu cách)\n  const findKey = (needle, fallback) =>\n    keys.find(k => k.trim().toLowerCase() === needle) ||\n    keys.find(k => k.trim().toLowerCase().includes(needle)) || fallback;\n\n  const keyOp1      = findKey(\"option 1\", \"Option 1 \");\n  const keyOp2      = findKey(\"option 2\", \"Option 2\");\n  const keyOp3      = findKey(\"option 3\", \"Option 3\");\n  const keyDuyetOp  = findKey(\"duyệt option\", \"Duyệt Option\");\n  \n  // Ưu tiên đọc link Kho Media Drive (chứa ảnh thô đầu vào của bài)\n  const keyKhoMedia = findKey(\"kho media drive\", \"\") || findKey(\"kho media\", \"\") || findKey(\"ảnh demo\", \"Ảnh Demo\");\n\n  const rawSelectedOp = String(row[keyDuyetOp] || \"\").trim();\n  if (!rawSelectedOp) {\n    return { json: {\n      ID: rowId,\n      selectedOp: \"CHƯA_CHỌN\",\n      folder_id: \"\",\n      fullMessage: \"⚠️ CHƯA CHỌN OPTION Ở CỘT 'Duyệt Option'\",\n      \"Kết quả\": \"no_option_selected_error\"\n    } };\n  }\n\n  // Xác định người dùng chọn Option 1, 2 hay 3\n  let optNum = 1;\n  if (rawSelectedOp.includes(\"2\")) optNum = 2;\n  else if (rawSelectedOp.includes(\"3\")) optNum = 3;\n\n  const textByOpt = { 1: row[keyOp1], 2: row[keyOp2], 3: row[keyOp3] };\n  let cleaned = String(textByOpt[optNum] || \"\")\n    .replace(/🖼️\\s*(MẪU\\s*\\d+|PREVIEW\\s*ÁNH)\\s*:\\s*\\S+/gi, \"\")\n    .replace(/^\\[.*?\\]\\s*/, \"\")\n    .replace(/^📌\\s*HOOK\\s*:\\s*/gim, \"\")\n    .replace(/^📝\\s*NỘI DUNG\\s*:\\s*/gim, \"\")\n    .replace(/👉\\s*Chi tiết tại:[\\s\\S]*$/i, \"\")\n    .trim();\n\n  // Bóc tách Hashtags ở cuối bài\n  const hashtagRegex = /((?:#[\\wÀ-ɏḀ-ỿ]+\\s*)+)$/i;\n  const m = cleaned.match(hashtagRegex);\n  let mainText = cleaned, hashtags = \"\";\n  if (m) { \n    hashtags = m[1].trim(); \n    mainText = cleaned.slice(0, m.index).trim(); \n  }\n\n  // Khối thông tin liên hệ chuẩn Ecolar\n  const contactInfo = `------------------------------------\nEcolar – Lối sống xanh bền vững\n🌐 Website: https://ecolar.vn/\n📞Hotline: 0868 515 668\n📧Email: lienhe@ecolar.vn\n📘Zalo OA: https://zalo.me/1699772582506373938\nⓕFacebook: https://www.facebook.com/Loisongxanhecolar\n▶️Youtube: https://www.youtube.com/@LoiSongXanhEcolar\n🎵Tiktok: https://www.tiktok.com/@gaaicapecolar`;\n\n  let fullMessage = `${mainText}\\n\\n${contactInfo}`;\n  if (hashtags) fullMessage += `\\n\\n${hashtags}`;\n  fullMessage = fullMessage.replace(/\\n{3,}/g, \"\\n\\n\").trim();\n\n  // Bóc tách Folder ID từ đường link Google Drive ở ô Kho Media Drive\n  const rawFolder = String(row[keyKhoMedia] || \"\").trim();\n  const fm = rawFolder.match(/folders\\/([a-zA-Z0-9_-]{20,})/)\n          || rawFolder.match(/[?&]id=([a-zA-Z0-9_-]{20,})/);\n  const folderId = fm ? fm[1]\n                      : (/^[a-zA-Z0-9_-]{20,}$/.test(rawFolder) ? rawFolder : \"\");\n\n  return { json: {\n    ID: rowId,\n    selectedOp: rawSelectedOp,\n    selectedContent: mainText,\n    folder_id: folderId,\n    fullMessage,\n    \"Kết quả\": folderId ? \"ready_to_gen_images\" : \"ready_to_gen_images_no_folder\"\n  } };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        720
+      ],
+      "id": "652bf58b-0a38-49b4-abcf-9e1b8e51fd9f",
+      "name": "Lấy Option Content"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "={{ \"'\" + ($json.folder_id || ($json[\"Kho Media Drive\"] || $json[\"Kho Media\"] || \"\").replace(/^.*\\/folders\\//, '').replace(/\\?.*$/, '')) + \"' in parents and trashed = false and (mimeType contains 'image/' or mimeType contains 'video/')\" }}\n",
+        "returnAll": true,
+        "filter": {
+          "whatToSearch": "files"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1024,
+        720
+      ],
+      "id": "5f086595-8513-4549-836b-7c09bf6ab8dc",
+      "name": "Liệt Kê Ảnh Trong Folder",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "md79mw2QP2cq5iB2",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c1000000-0000-4000-8000-000000000001",
+              "leftValue": "={{ $json.id || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1216,
+        720
+      ],
+      "id": "9ec8a110-721b-47f2-a986-8175582c3749",
+      "name": "If Có Ảnh Không"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=## 📌 SỐ LƯỢNG ẢNH CẦN CHỌN:\n{{ $('Kiểm tra trạng thái hiện tại').item.json[\"Số lượng ảnh\"] || 3 }} tấm ảnh\n\n## 📌 NỘI DUNG BÀI VIẾT ĐÃ CHỌN:\n{{ $('Lấy Option Content').item.json.selectedContent || $('Lấy Option Content').item.json.fullMessage }}\n\n## 📌 TIÊU CHUẨN KÍCH THƯỚC & CHỌN STYLE (CỘT AE):\n{{ $('Get row(s) in sheet1').item.json['Tiêu chuẩn Kích thước'] || \"Ratio carousel post: 1200x1200px. 1 ảnh: Style 1 (1200x1200px full). 2 ảnh: Style 2 (2 cột dọc 600x1200px), Style 3 (2 hàng ngang 1200x600px). 3 ảnh: Style 5 (3 cột dọc 400x1200px), Style 6 (1 to trái 600x1200px + 2 vuông 600x600px), Style 7 (1 to trên 1200x600px + 2 vuông 600x600px). 4 ảnh: Style 8 (lưới 2x2 600x600px), Style 9 (1 to trái + 3 nhỏ 600x400px), Style 10 (1 to trên + 3 nhỏ 400x600px). Lựa chọn Style theo tính chất nội dung (bình đẳng = đều nhau; có ý chính = 1 to + ô nhỏ).\" }}\n\n## 📌 TIÊU CHUẨN TYPOGRAPHY HEADLINE (CỘT AF):\n{{ $('Get row(s) in sheet1').item.json['Tiêu chuẩn Typography (Headling)']|| \"Headline ngắn gọn 3-6 từ, IN HOA, giật hook thu hút, không giải thích chi tiết.\" }}\n\n## 📌 TIÊU CHUẨN TYPOGRAPHY SUBTEXT (CỘT AG):\n{{ $('Get row(s) in sheet1').item.json['Tiêu chuẩn Typogrpahy (Subtext)'] || $('Get row(s) in sheet1').item.json['Tiêu chuẩn Typography (Subtext)'] || \"Subtext 1-2 dòng ngắn (~35-45 ký tự/dòng), giải thích bổ trợ cho Headline, mang tính khẳng định/thông tin.\" }}\n\n## 📌 QUY TẮC BỐC ẢNH THỰC TẾ (CỘT AH):\n{{ $('Get row(s) in sheet1').item.json['Quy tắc Hình ảnh'] || \"Ưu tiên tuyệt đối ảnh chụp thật là chủ thể chính, đúng trọng tâm nội dung.\" }}\n\n## 📌 DANH SÁCH ẢNH THÔ TRÊN GOOGLE DRIVE (TÊN, ID & THUMBNAIL SOI ẢNH 800PX):\n{{ JSON.stringify($json.data.map(f => ({ id: f.id, name: f.name, thumbnail: 'https://drive.google.com/thumbnail?id=' + f.id + '&sz=s800' }))) }}\n",
+        "options": {
+          "systemMessage": "==Bạn là Chuyên gia Content-to-Visual cho thương hiệu nông nghiệp Ecolar.\n\n## NHIỆM VỤ:\nPhân tích bài viết đã chọn, kết hợp với SỐ LƯỢNG ẢNH YÊU CẦU, TIÊU CHUẨN KÍCH THƯỚC & STYLE (CỘT AE), TIÊU CHUẨN TYPOGRAPHY (CỘT AF, AG), QUY TẮC BỐC ẢNH (CỘT AH) và DANH SÁCH ẢNH THÔ trên Google Drive để:\n1. Phân rã bài viết thành mảng N slide ảnh phù hợp.\n2. Tự động chọn `selected_style` và trích xuất nguyên văn thông số kích thước chi tiết (`style_spec`) từ Cột AE.\n3. Bốc chọn ảnh thô từ Drive khớp nhất với từng slide.\n4. Viết Headline & Subtext ấn tượng cho từng slide.\n\n## NGUYÊN TẮC SUY LUẬN ĐỘNG (DỰA TRÊN DỮ LIỆU CỘT):\n- **Tự chọn `selected_style` & Trích xuất `style_spec`**: \n  - Đọc trực tiếp danh sách Style và kích thước trong `TIÊU CHUẨN KÍCH THƯỚC (CỘT AE)`.\n  - Chọn Style phù hợp với `SỐ LƯỢNG ẢNH CẦN CHỌN` và tính chất bài viết.\n  - Trích xuất rõ thông số kích thước pixel của Style đó vào trường `style_spec` (Ví dụ: `\"3 ảnh: 1 cột dọc to bên trái (600x1200px) + 2 ô vuông xếp chồng bên phải (600x600px)\"`).\n- **Viết `headline`**: Đọc và làm theo chính xác `TIÊU CHUẨN TYPOGRAPHY HEADLINE (CỘT AF)`.\n- **Viết `subtext`**: Đọc và làm theo chính xác `TIÊU CHUẨN TYPOGRAPHY SUBTEXT (CỘT AG)`.\n- **Bốc chọn ảnh (`raw_image_ids` & `raw_image_names`)**: \n  - Tuân thủ `QUY TẮC BỐC ẢNH THỰC TẾ (CỘT AH)`, bốc đúng ID & tên ảnh thực tế từ Drive.\n  - Mặc định bốc 1 ID ảnh thô (`[\"ID_1\"]`). Nếu slide có nội dung so sánh/ghép hình, AI được phép bốc 2 (hoặc nhiều hơn) ID ảnh thô vào mảng (`[\"ID_1\", \"ID_2\"]`).\n\n## CHỌN KIỂU NỘI DUNG (content_type)\n\nVới MỖI slide, dựa vào bản chất của headline/subtext (chủ đề đang nói về cái gì, thông tin\ncó cần liệt kê hay giải thích không), tự quyết định 1 trong 4 kiểu nội dung sau — đây là\nQUYẾT ĐỊNH SÁNG TẠO, không có công thức cố định theo tên chủ đề:\n\n- \"tagline\": chủ đề chỉ cần 1 câu chốt ngắn, không cần diễn giải thêm.\n- \"paragraph\": chủ đề cần giải thích cơ chế/lý do — viết đoạn văn 3-4 câu liền mạch,\n  in đậm 1-2 cụm từ khóa quan trọng nhất bằng cú pháp **từ khóa**.\n- \"list\": chủ đề có nhiều đặc điểm/dấu hiệu rời rạc, liệt kê tự nhiên — viết 3-5 dòng\n  ngắn, mỗi dòng 1 ý, có thể in đậm từ đầu dòng bằng **từ khóa**.\n- \"icon_grid\": chủ đề có các yếu tố/hạng mục song song nhau (VD: dinh dưỡng gồm đạm/\n  khoáng/vitamin) — viết 4-6 cặp {icon_emoji, label_ngắn}, label tối đa 4-5 từ.\n\nChọn ĐÚNG 1 kiểu cho mỗi slide. Nội dung bên trong kiểu đã chọn được viết TỰ DO, miễn\nđúng sự thật và đúng giọng thương hiệu.\n\n\n## OUTPUT FORMAT (BẮT BUỘC CHỈ TRẢ VỀ JSON THUẦN, KHÔNG MARKDOWN, KHÔNG ```json):\nKHÔNG sử dụng định dạng Markdown như ** hay * trong subtext. Chỉ trả về văn bản thuần (Plain Text).\n{\n  \"selectedOp\": \"Option 1\",\n  \"total_images\": 3,\n  \"selected_style\": \"STYLE_6\",\n  \"style_spec\": \"3 ảnh: 1 cột dọc to bên trái (600x1200px) + 2 ô vuông xếp chồng bên phải (600x600px)\",\n  \"style_reason\": \"Lý do ngắn chọn Style này dựa trên quy tắc Cột AE và tính chất bài viết\",\n  \"items\": [\n    {\n      \"variant_no\": 1,\n      \"raw_image_ids\": [\"1_qmQCNVryYbN-Vvrdh5I1SUznpNN_eUr\"],\n      \"raw_image_names\": [\"Gà AC_6 tháng tuổi_thả vườn_1.jpg\"],\n      \"headline\": \"SỢ MUA NHẦM GÀ TRỐNG?\",\n      \"subtext\": \"Mẹo nhận biết sớm giúp tránh tốn cám và tối ưu sản lượng trứng\",\n\"content_type\": \"paragraph\",\n  \"rich_content\": {\n    \"paragraph_text\": \"Câu có **từ khóa** in đậm...\"\n  },\n      \"template_hint\": \"COVER_MAIN_LEFT\",\n      \"layout_note\": \"Slide 1: Ô cột dọc to bên trái (600x1200px)\"\n    }\n  ]\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1632,
+        704
+      ],
+      "id": "d443cf89-b4a3-432a-9a0e-2e48c8cfdeb7",
+      "name": "AI Tự chọn ảnh"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        704
+      ],
+      "id": "3ec3f4dc-991d-4010-8614-23e03dc1dbf3",
+      "name": "Gộp tất cả ảnh cho AI đọc"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Node: Tách ảnh từ nhiều link (Đã sửa tương thích cả selected_media & items)\nconst rawOutput = $input.first()?.json?.output \n  || $input.first()?.json?.text \n  || $('AI Tự chọn ảnh').first()?.json?.output \n  || \"\";\n\nconst cleanJson = String(rawOutput)\n  .replace(/```json/gi, '')\n  .replace(/```/g, '')\n  .trim();\n\nlet parsedData = {};\ntry {\n  parsedData = JSON.parse(cleanJson);\n} catch (e) {\n  parsedData = {};\n}\n\nfunction getDirectUrl(fileId) {\n  if (!fileId) return \"\";\n  const match = String(fileId).match(/\\/d\\/([a-zA-Z0-9_-]+)|id=([a-zA-Z0-9_-]+)/);\n  const cleanId = match ? (match[1] || match[2]) : fileId;\n  return `https://drive.usercontent.google.com/download?id=${cleanId}&export=download`;\n}\n\nfunction toArray(val) {\n  if (Array.isArray(val)) return val;\n  if (val === undefined || val === null || val === \"\") return [];\n  return [val];\n}\n\n// 1. LẤY MẢNG CÁC SLIDE (Tương thích cả selected_media, items, slides, option_1)\nconst selectedOpStr = parsedData.selectedOp || \"Option 1\";\nconst items = parsedData.items \n  || parsedData.selected_media \n  || parsedData.slides \n  || parsedData.option_1 \n  || [];\n\n// 2. LẤY THÔNG TIN THƯ MỤC DRIVE BÀI VIẾT\nlet driveFolderId = \"\";\ntry { driveFolderId = $('Tạo Folder Ảnh Cho Bài Viết1').first()?.json?.id || $('Search files and folders1').first()?.json?.id || \"\"; } catch (e) {}\n\nlet driveFolderLink = \"\";\ntry { driveFolderLink = $('Tạo Folder Ảnh Cho Bài Viết1').first()?.json?.webViewLink || $('Search files and folders1').first()?.json?.webViewLink || \"\"; } catch (e) {}\nif (!driveFolderLink && driveFolderId) {\n  driveFolderLink = `https://drive.google.com/drive/folders/${driveFolderId}`;\n}\n\nconst resultItems = [];\n\n// 3. LẶP QUA TỪNG SLIDE TRONG MẢNG ITEMS VÀ XUẤT RA N ITEM RIÊNG BIỆT\nif (Array.isArray(items) && items.length > 0) {\n  items.forEach((item, itemIdx) => {\n    // Đã bổ sung đọc file_id & file_name\n    const rawIds    = toArray(item.raw_image_ids   || item.raw_image_id   || item.file_id);\n    const rawNames  = toArray(item.raw_image_names || item.raw_image_name || item.file_name);\n    const subLabels = toArray(item.sub_labels);\n\n    const rawImages = rawIds.map((id, i) => ({\n      id: id || \"\",\n      name: rawNames[i] || \"\",\n      url: getDirectUrl(id)\n    }));\n\n    resultItems.push({\n      json: {\n        slide_index: item.variant_no || item.slide_index || (itemIdx + 1),\n        selectedOp: selectedOpStr,\n        \n        // Mảng ảnh thô đã bốc cho slide này\n        raw_images: rawImages,\n        raw_image_count: rawImages.length,\n\n        // ID và Link tải trực tiếp ảnh chính của slide này dùng cho node Tải Binary\n        raw_image_1_id:   rawImages[0]?.id   || \"\",\n        raw_image_1_name: rawImages[0]?.name || \"\",\n        raw_image_1_url:  rawImages[0]?.url  || \"\",\n\n        // Thông tin nội dung & layout thiết kế\n        headline: item.headline || \"\",\n        subtext: item.subtext || item.match_reason || \"\",\n        sub_labels: subLabels,\n        template_hint: item.template_hint || \"A_COVER\",\n        footnote: item.footnote || \"\",\n        layout_note: item.layout_note || \"\",\n\n        // Thư mục Drive\n        drive_folder_id: driveFolderId,\n        drive_folder_link: driveFolderLink\n      }\n    });\n  });\n}\n\nreturn resultItems.length > 0 ? resultItems : [{ json: { error: \"Không tìm thấy dữ liệu slide từ node AI Tự chọn ảnh\" } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1936,
+        704
+      ],
+      "id": "c87a08bd-f724-4fb7-a25d-237d24616beb",
+      "name": "Tách ảnh từ nhiều link"
+    },
+    {
+      "parameters": {
+        "jsCode": "const HOTLINE_TEXT = \"0868 515 668\";\n\nfunction getDirectUrl(fileId) {\n  if (!fileId) return \"\";\n  const match = String(fileId).match(/\\/d\\/([a-zA-Z0-9_-]+)|id=([a-zA-Z0-9_-]+)/);\n  const cleanId = match ? (match[1] || match[2]) : fileId;\n  return `https://drive.usercontent.google.com/download?id=${cleanId}&export=download`;\n}\n\nasync function fetchBinary(url) {\n  if (!url) return null;\n  try {\n    const response = await this.helpers.httpRequest({\n      method: 'GET',\n      url,\n      encoding: 'arraybuffer',\n      returnFullResponse: true,\n    });\n    const buffer = Buffer.isBuffer(response.body) ? response.body : Buffer.from(response.body);\n    const contentType = (response.headers && response.headers['content-type']) || 'image/jpeg';\n    return { buffer, contentType };\n  } catch (err) {\n    console.log(`❌ Tải LỖI: ${url} | ${err.message}`);\n    return null;\n  }\n}\n\nconst items = $input.all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  try {\n    const j = { ...(items[i].json || {}) };\n    const binary = {};\n\n    const rawList = Array.isArray(j.raw_images) && j.raw_images.length > 0\n      ? j.raw_images\n      : [{ id: j.raw_image_1_id, url: j.raw_image_1_url }];\n\n    for (let imgIdx = 0; imgIdx < rawList.length; imgIdx++) {\n      const imgObj = rawList[imgIdx];\n      const imgUrl = imgObj?.url || getDirectUrl(imgObj?.id);\n\n      if (imgUrl) {\n        const result = await fetchBinary.call(this, imgUrl);\n        if (result) {\n          const { buffer, contentType } = result;\n\n          // ✅ 1. Lưu binary như cũ (cho các node khác dùng)\n          binary[`raw_image_${imgIdx + 1}`] = await this.helpers.prepareBinaryData(buffer, undefined, contentType);\n        }\n      }\n    }\n\n    j.hotline_text = HOTLINE_TEXT;\n    results.push({ json: j, binary, pairedItem: { item: i } });\n\n  } catch (err) {\n    console.log(`❌ Item ${i} lỗi: ${err.message}`);\n    results.push({ json: { ...(items[i]?.json || {}), error: err.message }, binary: {}, pairedItem: { item: i } });\n  }\n}\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2112,
+        704
+      ],
+      "id": "b09c06e6-fc47-4974-a6df-524bcc4701c8",
+      "name": "Tải Ảnh & Gộp Binary"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        640,
+        704
+      ],
+      "id": "c62b01ae-e424-491c-bd49-27935a30ad90",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json['Trạng Thái'] }}",
+                    "rightValue": "gen_options",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "15e34f5d-98ba-4452-8eb7-453bbe18a917"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "1d0ed440-ffd1-4e7e-8411-f2d22d3caea5",
+                    "leftValue": "={{ $json['Trạng Thái'] }}",
+                    "rightValue": "waiting_review",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "57368963-8bde-463a-8e6a-04da82028d57",
+                    "leftValue": "={{ $json['Trạng Thái'] }}",
+                    "rightValue": "publish",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        384,
+        544
+      ],
+      "id": "00890c7a-c3f7-42a5-a893-a9b6167f8d90",
+      "name": "Kiểm tra trạng thái hiện tại"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1120,
+        1680
+      ],
+      "id": "e2c0bd18-55b4-4ea9-8c66-24297d9516c3",
+      "name": "Đăng Bài"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1e-MrG7aAD8q8Lu5yiue5Y6_XDTtqjtGbZWAxAxvwILM",
+          "mode": "list",
+          "cachedResultName": "Content_Gà Ai Cập",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1e-MrG7aAD8q8Lu5yiue5Y6_XDTtqjtGbZWAxAxvwILM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1045940223,
+          "mode": "list",
+          "cachedResultName": "Content Selector",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1e-MrG7aAD8q8Lu5yiue5Y6_XDTtqjtGbZWAxAxvwILM/edit#gid=1045940223"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Trạng Thái",
+              "lookupValue": "publish"
+            },
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -656,
+        1680
+      ],
+      "id": "fdc0cca3-9985-4721-9855-ee5fee54859c",
+      "name": "Lấy tất cả bài",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4qYXVO3KrkX5V1XQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "={{ \"'\" + $json.folder_id + \"' in parents and trashed = false\" }}\n",
+        "returnAll": true,
+        "filter": {
+          "whatToSearch": "files"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        256,
+        1664
+      ],
+      "id": "1e7812f2-bc2b-4ba9-b63b-f0ea4d6e2ea4",
+      "name": "Lấy link Media",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "md79mw2QP2cq5iB2",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4c25f72d-39e7-4790-a46d-3656b6bc3251",
+              "leftValue": "={{ $json.hasMedia }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        624,
+        1664
+      ],
+      "id": "7446df24-6130-414a-ae82-61307ae99f6b",
+      "name": "Kiểm tra có Media không",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id || '' }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1168,
+        1504
+      ],
+      "id": "3adf6f51-7dd0-4fe0-9c86-8016c11f4b9a",
+      "name": "Tải Ảnh Về",
+      "retryOnFail": false,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "md79mw2QP2cq5iB2",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/me/photos",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "EAAOZBdRigHskBSPZBNOBtnNMCxlwtPSSygZCJRSKHjjWmC1Y9ykvSLzt3EfsY8n2sae7R03ZCaeEmARW1JCtdYcfqApeicFc60EcCRkUGUlxZBdlWFA2x7q3Mb0xFgvOzN1KwWFkUEiZCmfpLJAIykCcVaHsnZAOBZCRMcnQi7GMWfJZCa7Ugt3SRXe2uoGZCSmqJG4RkgEzwJF0IvQPKCqRx9dPn8dV2k9HNtBpTOaSkZD"
+            },
+            {
+              "name": "published",
+              "value": "false"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "source",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1536,
+        1504
+      ],
+      "id": "80c5b82d-1ddb-42dc-87e5-ff37a0bef27d",
+      "name": "FB Upload Ảnh Chờ",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Node: Gom Ảnh & Dựng Bài (Chuẩn 100% cho cả 3 nhánh Switch)\nconst inputItems = $input.all();\nconst firstItem = inputItems[0]?.json || {};\n\n// 1. Lấy thông tin bài viết gốc (Tự động lấy đúng nguồn từ bất kỳ nhánh nào)\nlet opt = firstItem.fullMessage ? firstItem : null;\nif (!opt || !opt.fullMessage) {\n  try {\n    opt = $('Lấy Option content, đã có thời gian đăng').first().json;\n  } catch (e) {\n    opt = firstItem;\n  }\n}\n\n// 2. Gom danh sách Facebook Photo IDs (chỉ lọc những ID ảnh hợp lệ từ bước upload FB)\nconst photoIds = inputItems\n  .map(i => (i.json || {}).id)\n  .filter(id => id && !String(id).startsWith('http') && String(id) !== String(opt.ID));\n\n// 3. Dựng Body bài đăng gửi cho Facebook Graph API\nconst body = { message: opt.fullMessage || \"\" };\n\n// Nếu có ảnh (từ nhánh Drive hoặc Direct URL) -> Gắn mảng Album ảnh\nif (photoIds.length > 0) {\n  body.attached_media = photoIds.map(id => ({ media_fbid: String(id) }));\n}\n\nreturn [{\n  json: {\n    ID: opt.ID,\n    selectedOp: opt.selectedOp,\n    photo_count: photoIds.length,\n    fb_body: body\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        2064
+      ],
+      "id": "1a736c52-250c-43de-92b4-1512dd938fd9",
+      "name": "Gom Ảnh & Dựng Bài"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Node: Xóa Metadata AI (Hỗ trợ lặp và xử lý TOÀN BỘ N ảnh)\nconst items = $input.all();\nconst result = [];\n\nfor (let index = 0; index < items.length; index++) {\n  const item = items[index];\n  const binaryPropName = 'data';\n\n  // Nếu item không chứa file nhị phân ảnh thì giữ nguyên\n  if (!item.binary || !item.binary[binaryPropName]) {\n    result.push(item);\n    continue;\n  }\n\n  // Lấy buffer của từng ảnh theo chỉ số index\n  const buf = await this.helpers.getBinaryDataBuffer(index, binaryPropName);\n\n  // Lọc xóa toàn bộ khối Exif / C2PA nhãn AI trong JPEG\n  if (buf[0] === 0xFF && buf[1] === 0xD8) {\n    const cleaned = [0xFF, 0xD8];\n    let i = 2;\n    while (i < buf.length) {\n      if (buf[i] === 0xFF) {\n        const marker = buf[i + 1];\n        if (marker === 0xDA) { // SOS - Start of Scan (bắt đầu dữ liệu ảnh thực)\n          for (let j = i; j < buf.length; j++) cleaned.push(buf[j]);\n          break;\n        }\n        if (marker >= 0xE0 && marker <= 0xEF) { // APP0-APP15 (Khối chứa nhãn AI & Exif)\n          const len = (buf[i + 2] << 8) + buf[i + 3];\n          i += 2 + len;\n          continue;\n        }\n      }\n      cleaned.push(buf[i]);\n      i++;\n    }\n\n    const cleanBinary = await this.helpers.prepareBinaryData(\n      Buffer.from(cleaned),\n      item.binary[binaryPropName].fileName || `cleaned_${index}.jpg`,\n      'image/jpeg'\n    );\n    result.push({ json: item.json, binary: { [binaryPropName]: cleanBinary } });\n  } else {\n    result.push(item);\n  }\n}\n\n// Trả về đủ mảng tất cả N ảnh đã được làm sạch\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        1504
+      ],
+      "id": "d09f0d37-c74d-47d1-a459-531496eec7cc",
+      "name": "Xử lý Metadata AI nếu có"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1e-MrG7aAD8q8Lu5yiue5Y6_XDTtqjtGbZWAxAxvwILM",
+          "mode": "list",
+          "cachedResultName": "Content_Gà Ai Cập",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1e-MrG7aAD8q8Lu5yiue5Y6_XDTtqjtGbZWAxAxvwILM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1045940223,
+          "mode": "list",
+          "cachedResultName": "Content Selector",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1e-MrG7aAD8q8Lu5yiue5Y6_XDTtqjtGbZWAxAxvwILM/edit#gid=1045940223"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Trạng Thái": "=posted",
+            "row_number": "={{ $('Lấy Option được chọn1').first().json.ID }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Mục đích chính",
+              "displayName": "Mục đích chính",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Thông tin thương hiệu/sản phẩm/dịch vụ/USP",
+              "displayName": "Thông tin thương hiệu/sản phẩm/dịch vụ/USP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Ý tưởng/Hook",
+              "displayName": "Ý tưởng/Hook",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Kênh triển khai",
+              "displayName": "Kênh triển khai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Chân dung & Insight khách hàng",
+              "displayName": "Chân dung & Insight khách hàng",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Mục tiêu kinh doanh/marketing",
+              "displayName": "Mục tiêu kinh doanh/marketing",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Mục tiêu đầu ra",
+              "displayName": "Mục tiêu đầu ra",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Định dạng nội dung",
+              "displayName": "Định dạng nội dung",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Độ dài nội dung",
+              "displayName": "Độ dài nội dung",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Số phiên bản nội dung",
+              "displayName": "Số phiên bản nội dung",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Chủ đề phễu",
+              "displayName": "Chủ đề phễu",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Thông điệp chính",
+              "displayName": "Thông điệp chính",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Thông điệp phụ",
+              "displayName": "Thông điệp phụ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Công thức nội dung (Copywriting formula)",
+              "displayName": "Công thức nội dung (Copywriting formula)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Văn phong",
+              "displayName": "Văn phong",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Hành động mong muốn (CTA)",
+              "displayName": "Hành động mong muốn (CTA)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tỷ lệ Văn nói - Văn viết",
+              "displayName": "Tỷ lệ Văn nói - Văn viết",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tỷ lệ Định tính - Định lượng",
+              "displayName": "Tỷ lệ Định tính - Định lượng",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Số liệu - bằng chứng uy tín",
+              "displayName": "Số liệu - bằng chứng uy tín",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Prompt bổ sung / luật riêng",
+              "displayName": "Prompt bổ sung / luật riêng",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Option 1 ",
+              "displayName": "Option 1 ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Option 2",
+              "displayName": "Option 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Option 3",
+              "displayName": "Option 3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Duyệt Option",
+              "displayName": "Duyệt Option",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Trạng Thái",
+              "displayName": "Trạng Thái",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Kho Media Drive",
+              "displayName": "Kho Media Drive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1520,
+        2064
+      ],
+      "id": "6c596b51-f0ac-42b6-bbe8-c8f5eabbf635",
+      "name": "Update trạng thái",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4qYXVO3KrkX5V1XQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -176,
+        1680
+      ],
+      "id": "1757b00e-8943-4a8e-b62b-353981463666",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map((item, index) => {\n  const row = item.json;\n  const rowId = row[\"row_number\"] || row[\"ID\"] || (index + 5);\n  const keys = Object.keys(row);\n  \n  const findKey = (needle, fallback) =>\n    keys.find(k => k.trim().toLowerCase() === needle) ||\n    keys.find(k => k.trim().toLowerCase().includes(needle)) || fallback;\n\n  const keyOp1        = findKey(\"option 1\", \"Option 1 \");\n  const keyOp2        = findKey(\"option 2\", \"Option 2\");\n  const keyOp3        = findKey(\"option 3\", \"Option 3\");\n  const keyDuyetOp    = findKey(\"duyệt option\", \"Duyệt Option\");\n  const keyStatus     = findKey(\"trạng thái\", \"Trạng Thái\");\n  const keyAnhDemo    = findKey(\"Media sẽ đăng\", \"Media sẽ đăng\");\n  const keyTimePublish= findKey(\"thời gian đăng\", \"Thời Gian Đăng\");\n\n  const rawSelectedOp  = String(row[keyDuyetOp] || \"\").trim();\n  const currentStatus   = String(row[keyStatus] || \"\").trim().toLowerCase();\n  const rawPublishTime  = String(row[keyTimePublish] || \"\").trim();\n\n  // 1. Bỏ qua nếu chưa duyệt Option hoặc đã đăng bài\n  if (!rawSelectedOp || currentStatus === \"posted\") {\n    return null; \n  }\n\n  // 2. Kiểm tra giờ đăng bài (Hẹn giờ)\n  if (rawPublishTime) {\n    const scheduledTime = new Date(rawPublishTime);\n    const currentTime   = new Date();\n    if (!isNaN(scheduledTime.getTime()) && scheduledTime > currentTime) {\n      return null;\n    }\n  }\n\n  // 3. Phân loại loại Link Ảnh (Drive hay Direct Link URL)\n  const rawMedia = String(row[keyAnhDemo] || \"\").trim();\n  let mediaType = \"none\";\n  let folderId = \"\";\n  let directUrls = [];\n\n  if (rawMedia) {\n    // Nếu là link ảnh trực tiếp (http/https)\n    if (rawMedia.startsWith(\"http://\") || rawMedia.startsWith(\"https://\")) {\n      if (!rawMedia.includes(\"drive.google.com\")) {\n        mediaType = \"direct_url\";\n        directUrls = rawMedia.split(/[\\n,]/).map(u => u.trim()).filter(u => u.startsWith(\"http\"));\n      } else {\n        // Link Google Drive\n        mediaType = \"drive\";\n        const fm = rawMedia.match(/folders\\/([a-zA-Z0-9_-]{20,})/) || rawMedia.match(/[?&]id=([a-zA-Z0-9_-]{20,})/);\n        folderId = fm ? fm[1] : \"\";\n      }\n    } else if (/^[a-zA-Z0-9_-]{20,}$/.test(rawMedia)) {\n      // Trường hợp người dùng dán nguyên ID Folder Drive\n      mediaType = \"drive\";\n      folderId = rawMedia;\n    }\n  }\n\n  // 4. Trích xuất caption nội dung\n  let optNum = 1;\n  if (rawSelectedOp.includes(\"2\")) optNum = 2;\n  else if (rawSelectedOp.includes(\"3\")) optNum = 3;\n\n  const textByOpt = { 1: row[keyOp1], 2: row[keyOp2], 3: row[keyOp3] };\n  let cleaned = String(textByOpt[optNum] || \"\")\n    .replace(/🖼️\\s*(MẪU\\s*\\d+|PREVIEW\\s*ÁNH)\\s*:\\s*\\S+/gi, \"\")\n    .replace(/^\\[.*?\\]\\s*/, \"\")\n    .replace(/^📌\\s*HOOK\\s*:\\s*/gim, \"\")\n    .replace(/^📝\\s*NỘI DUNG\\s*:\\s*/gim, \"\")\n    .replace(/👉\\s*Chi tiết tại:[\\s\\S]*$/i, \"\")\n    .trim();\n\n  const hashtagRegex = /((?:#[\\wÀ-ɏḀ-ỿ]+\\s*)+)$/i;\n  const m = cleaned.match(hashtagRegex);\n  let mainText = cleaned, hashtags = \"\";\n  if (m) { hashtags = m[1].trim(); mainText = cleaned.slice(0, m.index).trim(); }\n\n  const contactInfo = `------------------------------------\nEcolar – Lối sống xanh bền vững\n🌐 Website: https://ecolar.vn/\n📞 Hotline: 0868 515 668\n📧 Email: lienhe@ecolar.vn\n📘 Zalo OA: https://zalo.me/1699772582506373938\nⓕ Facebook: https://www.facebook.com/Loisongxanhecolar`;\n\n  let fullMessage = `${mainText}\\n\\n${contactInfo}`;\n  if (hashtags) fullMessage += `\\n\\n${hashtags}`;\n  fullMessage = fullMessage.replace(/\\n{3,}/g, \"\\n\\n\").trim();\n\n  return { \n    json: { \n      ID: rowId, \n      selectedOp: rawSelectedOp, \n      mediaType, \n      folder_id: folderId, \n      directUrls, \n      fullMessage \n    } \n  };\n}).filter(Boolean);\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        1680
+      ],
+      "id": "58ea5935-0378-4ddd-9da0-08a6d81a3d54",
+      "name": "Lấy Option content, đã có thời gian đăng"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.mediaType }}",
+                    "rightValue": "drive",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e4d3fe02-94d0-4e99-b1bd-8f054606418b"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "216c3bcf-dd90-4e91-af70-5c7763b55488",
+                    "leftValue": "={{ $json.mediaType }}",
+                    "rightValue": "direct_url",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        48,
+        1680
+      ],
+      "id": "d3bb2d48-dbbb-4615-b838-99533e504d8b",
+      "name": "Phân loại Media"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().filter(item => item.json && item.json.id);\n\nreturn [{\n  json: {\n    soLuongMedia: items.length,\n    hasMedia: items.length > 0\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        1664
+      ],
+      "id": "7d1fa6b9-8e8e-47ba-ad20-af2243293626",
+      "name": "Đếm số ảnh"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e3e18f15-b202-4394-aa20-18737101ddfe",
+              "leftValue": "={{ Boolean(($json.mimeType && $json.mimeType.includes('video')) || /\\.(mp4|mov|avi|mkv|webm|flv)$/i.test($json.name || \"\")) }}\n",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        1648
+      ],
+      "id": "bf0759b7-3f11-483b-a58b-fbccc0030e47",
+      "name": "Phân Loại File (Ảnh hay Video)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2ade388f-7207-48ca-90ac-de8083732e56",
+              "name": "FB_PAGE_TOKEN",
+              "value": "EAAOZBdRigHskBSIyZCkvyPxDGL2XnX5ZCFFNqx8apZAcbBuZCNlpgwSii6vFIhVtRZBXDhjQlWgSjESJQytPvsX6OWtXnkpD51EC2sHkWMJpAMtNNPKHLLClNmcW3qSTzBISLIIFZA2QOx2YKCIBcJiBG41rfMVLeGwnucAikPn4jt25Uc7qUwcnkySiQwlu1dePQ19kgs8gFVJqEzUCJZCQvIepgtS8dumzGsjBp4JS",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -880,
+        1680
+      ],
+      "id": "bb1a2311-7307-47ba-9506-1912a910d688",
+      "name": "Cấu Hình Token"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/me/feed",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "EAAOZBdRigHskBSI65bHxKX8D5iqbgSP1vljH1b8AIvLU0SgGhl9rWVLmoZBMT3lWKhCZCuN7KDLxJreFIZB1ZBT7ZAmscxZBy0PWc561pi1hOoVB89YOuvC1lmv7kJEwkXXaQb3Y5ynCj5XyZANkiUH1DKLunHKnGJ9tFfQVm6e97HDitbhOaVLJAbQwJFuxZBKTGoN2OYTteEaaX06EggzFduvMhbMqNSUrAD6tdBk4ZD"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.fb_body) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1296,
+        2064
+      ],
+      "id": "7a15aadc-1a08-4d97-8fcd-e76e1a492dad",
+      "name": "FB Đăng Bài (Ảnh)",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.28.160.1:3001/upload-video",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "drive_url",
+              "value": "={{ 'https://drive.google.com/uc?export=download&id=' + ($('Lấy link Media').first().json.id || $json.folder_id) }}"
+            },
+            {
+              "name": "access_token",
+              "value": "EAAOZBdRigHskBSE5jviyfVYPengKIRYphhz6UfCQw6USEWX5gvk826eNG2a60LoXIQraYZCgFNwZCUyqyKP84Eh7BDuY5IujkJRhAjyAqW8vZB9OqcGHpFdUnDeNegD0ZCSPzpoTkAadBcMZBbnZAc9tKdeTXZCTPfZBD03PM17ZCZBk1erhJKbcCVCz5ZBWMZBoZBiyVyMAclXOQCZCdBJKf0j9XjjYWakXkYPKexZAP3oRZBmQZD"
+            },
+            {
+              "name": "description",
+              "value": "={{ $('Lấy Option content, đã có thời gian đăng').item.json.fullMessage }}"
+            },
+            {
+              "name": "page_id",
+              "value": "me"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2032,
+        2032
+      ],
+      "id": "b817e725-9496-48e6-a36b-84c5471e74f3",
+      "name": "FB Đăng bài + Video"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/me/photos",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "EAAOZBdRigHskBSIxB1N7WaaC9MIFhtmZCJCNhzDZB1ZB5JbVkvSkZB8TUh3OsK59edZCrgN1X3kjmUSwiPc45HMcPA22ziuZAXORDbYkeywHbXCU8ZCusPiXsuDvDGqIZB3mRl0MMzQPZBLiZAzigPugMeAOtTdaNOCejBLIwvgCb0gYDjXoVFSXBMMXcpCH90fHYo3lTZAFOD3VoTpEFE8mLsMBlHJVRW0dFQeLPmjFmG9QuUEZD"
+            },
+            {
+              "name": "published",
+              "value": "false"
+            },
+            {
+              "name": "url",
+              "value": "={{ $json.directUrls[0] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        496,
+        2048
+      ],
+      "id": "5e4ae4e3-08fe-41cd-8b67-30b6eb523dae",
+      "name": "FB Upload Direct URL Ảnh",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $('Lấy link Media').all();\nconst videoExts = ['.mp4', '.mov', '.avi', '.mkv', '.webm'];\n\nconst videoItems = items.filter(i => {\n  const name = (i.json.name || '').toLowerCase();\n  const isVideo = videoExts.some(ext => name.endsWith(ext));\n  const isPosted = /_posted\\.[a-z0-9]+$/i.test(i.json.name || '');\n  return isVideo && !isPosted;\n});\nconst videoCount = videoItems.length;\n\nif (videoCount <= 1) {\n  return (videoCount ? videoItems : items).map(item => ({\n    json: { ...item.json, skipAI: true }\n  }));\n}\n\nreturn [{\n  json: {\n    skipAI: false,\n    videoItems: videoItems.map(item => item.json)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        1792
+      ],
+      "id": "80a7b841-2bf0-4b98-959f-ab845bdf6fc0",
+      "name": "Đếm & Kiểm Tra Nhiều Video"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a3ccae78-034d-4c38-9dc9-9a78fe3a0286",
+              "leftValue": "={{$json.skipAI}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1296,
+        1792
+      ],
+      "id": "1ae57614-bfda-4cb7-b3ab-9b4d8775aee3",
+      "name": "Có Cần AI Chọn Không"
+    },
+    {
+      "parameters": {
+        "jsCode": "const videoItems = $json.videoItems;\nreturn videoItems.map(v => ({ json: v }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1536,
+        1728
+      ],
+      "id": "736ac4ea-4f95-4931-912b-b82663c5fd66",
+      "name": "Tách Danh Sách Video"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files/{{$json.id}}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "thumbnailLink,name,id,mimeType"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1744,
+        1808
+      ],
+      "id": "b24b10df-96fe-4ae2-8bd0-536f9899d99c",
+      "name": "Lấy Thumbnail Link",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "md79mw2QP2cq5iB2",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.thumbnailLink ? $json.thumbnailLink : `https://drive.google.com/thumbnail?id=${$json.id}&sz=w800` }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1936,
+        1728
+      ],
+      "id": "b2f9008f-6741-4f05-89ee-f34457443ba0",
+      "name": "Tải Ảnh Thumbnail"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst merged = { json: {}, binary: {} };\nconst videoList = [];\n\nitems.forEach((item, idx) => {\n  const key = `thumb_${idx}`;\n  merged.binary[key] = item.binary.data;\n  videoList.push({\n    index: idx + 1,\n    id: $('Lấy Thumbnail Link').all()[idx].json.id,\n    name: $('Lấy Thumbnail Link').all()[idx].json.name\n  });\n});\n\nmerged.json = { videoList };\nreturn [merged];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2112,
+        1728
+      ],
+      "id": "4b9b39af-1840-43e2-8b30-98ec11b40052",
+      "name": "Gộp Thumbnail Cho AI Đọc"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.6-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.6-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Đây là {{$json.videoList.length}} ảnh xem trước (thumbnail) của các video, theo đúng thứ tự:\n{{ $json.videoList.map(v => `${v.index}. id=${v.id}, tên gốc=${v.name}`).join('\\n') }}\n\nChủ đề bài đăng hiện tại: {{ $('Lấy Option content, đã có thời gian đăng').item.json.fullMessage }}\n\nYêu cầu:\n1. Đặt tên mô tả ngắn gọn cho TẤT CẢ các video trên, dựa vào nội dung thấy trong từng thumbnail —\n   không dấu, không khoảng trắng (dùng gạch ngang), giữ nguyên đuôi file gốc.\n2. Trong số đó, chọn ra 1 video PHÙ HỢP NHẤT với chủ đề bài đăng hiện tại.\n\nChỉ trả về ĐÚNG JSON sau, không thêm chữ nào khác:\n{\n  \"videos\": [\n    {\"id\": \"...\", \"new_file_name\": \"...\"},\n    {\"id\": \"...\", \"new_file_name\": \"...\"}\n  ],\n  \"selected_video_id\": \"...\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        2304,
+        1728
+      ],
+      "id": "75e6a644-e131-432c-a8c6-d585bd572360",
+      "name": "Chọn Video Theo Thumbnail",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OhMDTErkEzbNR5fn",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.content.parts[0].text;\nconst match = raw.match(/\\{[\\s\\S]*\\}/);\nconst parsed = JSON.parse(match[0]);\n\nfunction sanitize(name) {\n  return name.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/[^a-zA-Z0-9._-]/g, '-').replace(/-+/g, '-');\n}\n\nreturn parsed.videos.map(v => {\n  const isSelected = v.id === parsed.selected_video_id;\n  let finalName = sanitize(v.new_file_name);\n  return {\n    json: { id: v.id, new_file_name: finalName, isSelected }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2608,
+        1728
+      ],
+      "id": "dfb97ea5-2db7-41d1-8b40-93e6ab2114fb",
+      "name": "Parse & Làm Sạch Tên"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "={{$json.new_file_name}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2800,
+        1728
+      ],
+      "id": "4a867fce-37e3-4226-9ede-b596a2f34534",
+      "name": "Đổi Tên Video",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "md79mw2QP2cq5iB2",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const selectedId = $('Parse & Làm Sạch Tên').all().find(i => i.json.isSelected).json.id;\nconst items = $input.all();\nconst selectedItem = items.find(i => i.json.id === selectedId);\n\n// Lấy lại mimeType gốc từ danh sách video ban đầu (vì sau khi qua Google Drive Update,\n// output có thể không còn giữ đúng mimeType thật của file)\nconst originalInfo = $('Đếm & Kiểm Tra Nhiều Video').first().json.videoItems.find(v => v.id === selectedId);\n\nreturn [{\n  json: {\n    id: selectedItem.json.id,\n    name: selectedItem.json.name, // kiểm tra field Drive Update trả ra có đúng tên \"name\" không\n    mimeType: originalInfo ? originalInfo.mimeType : 'video/mp4'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2976,
+        1728
+      ],
+      "id": "65d0f13d-3f61-494b-805a-5dd093fe0a7e",
+      "name": "Chuẩn Hoá Item Video Đã Chọn"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Chuẩn Hoá Item Video Đã Chọn').first().json.id || $json.id || $('Lấy link Media').first().json.id }}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "=={{ ($json.name || $('Chuẩn Hoá Item Video Đã Chọn').first().json.name || 'video').replace(/(_posted)?(\\.[a-z0-9]+)?$/i, '_posted$2') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1792,
+        2064
+      ],
+      "id": "50a28908-a0d2-4737-a30b-b89cf825f067",
+      "name": "Đánh dấu Posted",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "md79mw2QP2cq5iB2",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        672,
+        400
+      ],
+      "id": "7dd22728-71a0-49c8-9c7a-8fcef71a26ed",
+      "name": "Loop Over Items2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Node: VISUAL BRIEF BUILDER\n// Gộp Output từ AI Tự Chọn Ảnh + 3 Cột Brand Rules (Cột AI, Cột AJ, Cột AK)\n\nlet sheetItem = {};\ntry {\n  sheetItem = $('Loop Over Items').first().json;\n} catch (e1) {\n  try {\n    sheetItem = $('Xử lý gom các nội dung trùng').first().json;\n  } catch (e2) {\n    sheetItem = $('Get row(s) in sheet1').first().json || $input.first().json;\n  }\n}\n\nlet aiRoot = {};\ntry {\n  const rawText = $('AI Tự chọn ảnh').first()?.json?.output || $('AI Tự chọn ảnh').first()?.json?.text || \"\";\n  const cleanJson = String(rawText).replace(/```json/gi, '').replace(/```/g, '').trim();\n  aiRoot = JSON.parse(cleanJson);\n} catch (e) {\n  aiRoot = $input.first()?.json || {};\n}\n\nfunction getRawCellContent(obj, keywords) {\n  if (!obj) return \"\";\n  const keys = Object.keys(obj);\n  for (const kw of keywords) {\n    const cleanKw = kw.toLowerCase().replace(/\\s+/g, '');\n    for (const k of keys) {\n      if (k.toLowerCase().replace(/\\s+/g, '').includes(cleanKw)) {\n        if (obj[k] !== undefined && obj[k] !== null) return String(obj[k]).trim();\n      }\n    }\n  }\n  return \"\";\n}\n\nconst brandRules = {\n  design_rule: getRawCellContent(sheetItem, [\"thiếtkếảnh\", \"designrule\", \"bốcục\"]),\n  background_rule: getRawCellContent(sheetItem, [\"background\", \"mềnnền\"]),\n  footer_badge_rule: getRawCellContent(sheetItem, [\"bagde\", \"badge\", \"footer\"])\n};\n\nconst items = $input.all().map((item, index) => {\n  const j = item.json || {};\n  return {\n    variant_no: j.variant_no || (index + 1),\n    headline: j.headline || \"\",\n    subtext: j.subtext || \"\",\n    template_hint: j.template_hint || \"COVER_MAIN_LEFT\",\n    layout_note: j.layout_note || \"\",\n    raw_image_ids: j.raw_image_ids || (j.raw_image_1_id ? [j.raw_image_1_id] : []),\n    raw_image_names: j.raw_image_names || (j.raw_image_1_name ? [j.raw_image_1_name] : []),\n    raw_image_1_url: j.raw_image_1_url || \"\",\n  };\n});\n\nreturn [\n  {\n    json: {\n      selectedOp: aiRoot.selectedOp || $input.first()?.json?.selectedOp || \"Option 1\",\n      total_images: items.length,\n      selected_style: aiRoot.selected_style || $input.first()?.json?.selected_style || \"\",\n      style_spec: aiRoot.style_spec || $input.first()?.json?.style_spec || \"\",\n      style_reason: aiRoot.style_reason || $input.first()?.json?.style_reason || \"\",\n      brand_rules: brandRules,\n      items: items\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        896
+      ],
+      "id": "840a9319-124a-432b-90a1-3bde45c9d6ef",
+      "name": "VISUAL BRIEF BUILDER"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Node: Prompt Builder (Đã sửa: Dùng Binary Base64 thay vì URL Drive)\n\nconst inputData = $input.first()?.json || {};\n\nconst selectedStyle = inputData.selected_style || \"\";\nconst styleSpec = inputData.style_spec || \"\";\nconst totalImages = inputData.total_images || (inputData.items ? inputData.items.length : 1);\nconst brandRules = inputData.brand_rules || {};\n\nconst slides = Array.isArray(inputData.items) ? inputData.items : $input.all().map(i => i.json);\n\n// Lấy binary từ toàn bộ input items (mỗi item một slide)\nconst allInputItems = $input.all();\n\nreturn slides.map((slide, index) => {\n  const slideIndex = slide.variant_no || (index + 1);\n\n  // ✅ ĐỌC BINARY VÀ CONVERT SANG BASE64 DATA URI\n  const inputItem = allInputItems[index] || allInputItems[0];\n  const binaryKey = `raw_image_1`;\n  const binaryData = inputItem?.binary?.[binaryKey];\n  let imageBase64Uri = \"\";\n  if (binaryData?.data) {\n    const mimeType = binaryData.mimeType || \"image/jpeg\";\n    imageBase64Uri = `data:${mimeType};base64,${binaryData.data}`;\n  } else {\n    // Fallback về thumbnail URL public (không bị CORS)\n    const rawId = (slide.raw_image_ids || [])[0] || \"\";\n    if (rawId) {\n      imageBase64Uri = `https://drive.google.com/thumbnail?id=${rawId}&sz=s1200`;\n    }\n  }\n\n  const promptText = `\nQUY CHUẨN THIẾT KẾ THƯƠNG HIỆU:\n- Quy tắc thiết kế (Cột AI): ${brandRules.design_rule || ''}\n- Quy tắc Background (Cột AJ): ${brandRules.background_rule || ''}\n- Quy tắc Footer Badge (Cột AK): ${brandRules.footer_badge_rule || ''}\n\n===================================================\nYÊU CẦU THIẾT KẾ SLIDE ${slideIndex}/${totalImages}:\n- Style áp dụng: ${selectedStyle} (${styleSpec})\n- KÍCH THƯỚC KHUNG BẮT BUỘC SLIDE NÀY: ${slide.layout_note || ''}\n- Template hint: ${slide.template_hint || ''}\n\n👉 THÔNG TIN CHỮ & NỘI DUNG SLIDE:\n- Headline: \"${slide.headline || ''}\"\n- Subtext: \"${slide.subtext || ''}\"\n\n👉 NHIỆM VỤ BẮT BUỘC CỦA MODEL:\nHãy dựng code HTML/CSS hoàn chỉnh cho Slide ${slideIndex}. \nCHÚ Ý KÍCH THƯỚC: Tạo khung container đúng kích thước ghi tại [KÍCH THƯỚC KHUNG BẮT BUỘC SLIDE NÀY] ở trên!\n`.trim();\n\n  return {\n    json: {\n      slide_index: slideIndex,\n      total_post_images: totalImages,\n      chosen_style: selectedStyle,\n      style_spec: styleSpec,\n      headline: slide.headline || \"\",\n      subtext: slide.subtext || \"\",\n      template_hint: slide.template_hint || \"\",\n      layout_note: slide.layout_note || \"\",\n      raw_image_ids: slide.raw_image_ids || [],\n      raw_image_names: slide.raw_image_names || [],\n      raw_image_1_url: `https://drive.google.com/thumbnail?id=${(slide.raw_image_ids||[])[0]}&sz=s1200`,\n      prompt_for_generator: promptText\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        960
+      ],
+      "id": "9dd0f7b3-8745-4baf-b305-82a99bb8d93b",
+      "name": "(Prompt Builder"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.6-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1568,
+        912
+      ],
+      "id": "31e34706-c0dc-41b3-b3cd-d828404d98a7",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "y6Detpd2dHE81Rnx",
+          "name": "khangvskiss15"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.6-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.6-flash",
+          "cachedResultUrl": ""
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=# ROLE: Senior Creative HTML/CSS Designer cho thương hiệu chăn nuôi Ecolar.\n\n## NHIỆM VỤ\nBạn nhận một Brand Brief + nội dung thô. Nhiệm vụ: (1) biên tập lại Subtext cho\nhút hơn, (2) LẮP nội dung vào ĐÚNG bộ khung CSS mẫu bên dưới — KHÔNG được tự chế\nCSS mới, KHÔNG được đổi các con số blur/opacity/box-shadow đã cho sẵn.\n\n{{ $json.prompt_for_generator }}\n\n===================================================\n## PHẦN A — BIÊN TẬP NỘI DUNG (được sáng tạo tự do)\n\nViết thêm 1 nhãn ngắn (2-4 từ, IN HOA) điền vào __TAG_TEXT__ để gắn thẻ chủ đề của\nslide này, ví dụ \"MẸO CHĂN NUÔI\", \"BÍ QUYẾT PHÂN BIỆT\", \"LƯU Ý QUAN TRỌNG\" — chọn\ntừ phù hợp với nội dung headline/subtext, không lặp lại y nguyên chữ trong headline.\n\nViết lại Subtext theo giọng \"chuyên gia mách nước\": thêm 1 từ mở đầu như\n\"Mẹo:\", \"Bật mí:\", \"Lưu ý:\"; giữ đúng 100% ý nghĩa gốc, không thêm số liệu bịa.\nVí dụ: \"Gà mái thon gọn lông phủ nhanh...\" → \"Bật mí: Mái thon gọn, lông phủ\ncực nhanh. Trong khi trống chân to, dáng lanh lẹ & đuôi nhọn hơn hẳn!\"\n\nHeadline: IN HOA, ngắt dòng tối đa 2 dòng, chọn đúng 1-2 từ khóa đắt giá nhất\nđể tô màu highlight (xem class .hl bên dưới) — KHÔNG tô quá 2 từ.\n\n===================================================\n## PHẦN B — KHUNG CSS BẮT BUỘC (KHÔNG được đổi bất kỳ số nào, không tự thêm/bớt\nclass, không chỉnh top/left/position của bất kỳ khối nào — khung dưới đây đã tự\ngiãn theo đúng tỉ lệ, bạn chỉ cần điền nội dung)\n\n⚠️ CẢNH BÁO NGHIÊM TRỌNG VỀ 2 CHỖ ĐÁNH DẤU TRONG KHUNG BÊN DƯỚI:\nKhung HTML có đúng 2 chỗ src=\"__IMG_1__\" và src=\"__LOGO_URL__\". Đây là 2 CHUỖI KÝ TỰ\nKỸ THUẬT CỐ ĐỊNH — một hệ thống khác sẽ tự động thay chúng bằng ảnh thật NGAY SAU KHI\nbạn xuất xong, bạn KHÔNG được biết trước ảnh đó là gì.\n- TUYỆT ĐỐI GIỮ NGUYÊN VĂN 2 chuỗi này, copy y hệt từng ký tự, kể cả dấu gạch dưới.\n- TUYỆT ĐỐI KHÔNG tự thay bằng bất kỳ đường link ảnh nào khác (dù là link thật, link\n  ảnh minh hoạ, hay link bạn \"nghĩ\" là phù hợp hơn) — làm vậy sẽ khiến hệ thống không\n  nhận diện được vị trí cần chèn ảnh, gây lỗi nghiêm trọng.\n- Nếu bạn không chắc phải điền gì vào đó: ĐỪNG ĐIỀN GÌ CẢ, cứ để nguyên y hệt bản mẫu.\n\nDưới đây là khung HTML/CSS bắt buộc — chỉ được điền chữ vào các chỗ có dấu __..._,\nví dụ __HEADLINE__, __SUBTEXT__ — TUYỆT ĐỐI không sửa bất kỳ số nào trong phần CSS,\nkhông tự vẽ thêm logo (logo thật đã có sẵn trong khung), không thêm/bớt/di chuyển\nbất kỳ phần tử <div> nào.\n\n<!DOCTYPE html>\n<html lang=\"vi\">\n<head>\n<meta charset=\"UTF-8\">\n<style>\n  * { margin:0; padding:0; box-sizing:border-box; font-family:'Nunito','Poppins','Segoe UI',sans-serif; }\n  html,body { width:__CANVAS_W__px; height:__CANVAS_H__px; overflow:hidden; }\n  .cover { position:relative; width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between; padding:40px; background:radial-gradient(120% 90% at 78% 8%, #14a34a 0%, #056823 42%, #045620 100%); }\n  .cover::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(155deg, rgba(191,215,48,0) 35%, rgba(191,215,48,.45) 100%); }\n\n  /* Trang trí nền cố định — luôn giống nhau mọi bài, AI không được đụng vào */\n  .deco-circle-1 { position:absolute; width:220px; height:220px; border-radius:50%; background:rgba(255,255,255,.05); top:-60px; left:-60px; pointer-events:none; }\n  .deco-circle-2 { position:absolute; width:140px; height:140px; border-radius:50%; background:rgba(255,255,255,.06); bottom:120px; left:20%; pointer-events:none; }\n  .deco-leaf { position:absolute; width:90px; height:36px; border-radius:50% 0; background:rgba(255,255,255,.08); transform:rotate(-20deg); top:18%; left:8%; pointer-events:none; }\n\n  .logo { position:absolute; top:28px; left:28px; height:40px; z-index:10; }\n\n  .tag { position:relative; z-index:5; display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.9); color:#045620; font-weight:700; font-size:12.5px; padding:5px 14px; border-radius:999px; margin-top:80px; align-self:flex-start; letter-spacing:.3px; }\n\n  .headline-block { position:relative; z-index:5; max-width:62%; margin-top:14px; }\n  h1 { color:#fff; font-size:44px; font-weight:800; line-height:1.15; text-shadow:0 2px 10px rgba(0,0,0,.25); }\n  .hl { color:#d7f24a; text-shadow:0 0 18px rgba(215,242,74,.75); }\n\n  .photo-wrap { position:relative; z-index:5; align-self:flex-end; width:55%; aspect-ratio:1/1; border-radius:50%; background:#fff; padding:6px; box-shadow:0 0 0 1px rgba(255,255,255,.15),0 18px 40px rgba(0,0,0,.35),0 0 60px rgba(191,215,48,.25); margin-top:-40px; }\n  .photo-wrap img { width:100%; height:100%; object-fit:cover; border-radius:50%; }\n\n  .subtext-block { position:relative; z-index:5; background:linear-gradient(160deg,rgba(255,255,255,.16),rgba(255,255,255,.06)); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.35); border-radius:18px; padding:22px 26px; margin-top:24px; }\n  .subtext-block p { color:#fff; font-size:20px; font-weight:700; line-height:1.4; }\n\n  .badge { display:flex; align-items:center; gap:8px; background:#056823; padding:7px 16px 7px 7px; border-radius:999px; box-shadow:0 3px 10px rgba(0,0,0,.35); align-self:flex-start; margin-top:20px; }\n  .badge span { color:#fff; font-weight:700; font-size:13px; }\n</style>\n</head>\n<body>\n  <div class=\"cover\">\n    <div class=\"deco-circle-1\"></div>\n    <div class=\"deco-circle-2\"></div>\n    <div class=\"deco-leaf\"></div>\n    <img class=\"logo\" src=\"__LOGO_URL__\">\n    <div class=\"tag\">__TAG_TEXT__</div>\n    <div class=\"headline-block\"><h1>__HEADLINE__</h1></div>\n    <div class=\"photo-wrap\"><img src=\"__IMG_1__\"></div>\n    <div class=\"subtext-block\"><p>__SUBTEXT__</p></div>\n    <div class=\"badge\"><span>0868 515 668</span></div>\n  </div>\n</body>\n</html>\n===================================================\n## KIỂM TRA TRƯỚC KHI XUẤT (tự hỏi, không cần trả lời ra ngoài)\n1. Đã giữ nguyên y hệt toàn bộ <style> và cấu trúc <div> trong khung mẫu, không\n   thêm/bớt/di chuyển bất kỳ phần tử hay CSS nào chưa?\n2. src=\"__IMG_1__\" và src=\"__LOGO_URL__\" có còn NGUYÊN VĂN, chưa bị thay bằng link\n   nào khác chưa?\n3. Container đã đúng kích thước __CANVAS_W__ x __CANVAS_H__ được yêu cầu chưa?\n4. Subtext đã được biên tập lại theo giọng chuyên gia chưa, còn giữ đúng ý gốc\n   không?\n5. Chỉ tô màu .hl cho tối đa 2 từ khóa headline chưa?\n\n=== BẮT BUỘC ĐẦU RA ===\nChỉ trả về duy nhất mã CODE HTML thuần (bắt đầu bằng <!DOCTYPE html>, kết thúc\nbằng </html>). Không dùng markdown ```html, không giải thích."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        2128,
+        960
+      ],
+      "id": "08157af7-7d53-402b-ba8d-57fc05d28213",
+      "name": "AI Sinh HTML Infographic",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "y6Detpd2dHE81Rnx",
+          "name": "khangvskiss15"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// MỚI — hàm tách số đo (rộng x cao) từ chữ mô tả kích thước khung\nfunction parseCanvasSize(text) {\n  const m = String(text || '').match(/(\\d+)\\s*x\\s*(\\d+)/i);\n  if (m) return { width: parseInt(m[1]), height: parseInt(m[2]) };\n  return { width: 1200, height: 1200 }; // không tìm thấy số thì dùng mặc định\n}\n\nreturn $input.all().map(item => {\n  const j = item.json;\n  let rawHtml = j.html_output || j.content?.parts?.[0]?.text || j.output || j.text || \"\";\n  let cleanHtml = String(rawHtml)\n    .replace(/^```html/gi, '')\n    .replace(/^```/gi, '')\n    .replace(/```$/g, '')\n    .trim();\n\n  const canvas = parseCanvasSize(j.layout_note); // MỚI — đọc kích thước từ layout_note của slide này\n\n  return {\n    json: {\n      slide_index: j.slide_index || 1,\n      clean_html: cleanHtml,\n      original_raw_html: rawHtml,\n      raw_image_1_url: j.raw_image_1_url || \"\",\n      canvas_width: canvas.width,   // MỚI\n      canvas_height: canvas.height  // MỚI\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2304,
+        1200
+      ],
+      "id": "b37f2d8b-7513-43ad-b000-0183444916c3",
+      "name": "Chuẩn Hóa HTML"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.28.160.1:3001/render-html",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"html\": {{ JSON.stringify($json.clean_html) }}\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3056,
+        880
+      ],
+      "id": "0be8be72-e6b6-4226-a16f-a9f39ba958be",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const LOGO_URL = \"http://172.28.160.1:3001/assets/logo.png\";\n\nconst items = $input.all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const j = items[i].json || {};\n  let htmlCode = j.content?.parts?.[0]?.text || j.html_output || j.output || j.text || \"\";\n  const imageUrl = j.raw_image_1_url || \"\";\n\n  if (imageUrl) htmlCode = htmlCode.replace(/__IMG_1__/g, imageUrl);\n  htmlCode = htmlCode.replace(/__LOGO_URL__/g, LOGO_URL); // MỚI\n\n  results.push({ json: { ...j, html_output: htmlCode } });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2016,
+        1200
+      ],
+      "id": "f6c95c2b-4921-4dce-9231-14c492c6e3bd",
+      "name": "Gắn Ảnh vào HTML"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.raw_image_1_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2640,
+        928
+      ],
+      "id": "5e4c931a-8186-4ab5-acf1-8c3dfe0d418b",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const j = item.json;\n  let html = j.clean_html || \"\";\n\n  if (item.binary?.data) {\n    const buffer = await this.helpers.getBinaryDataBuffer(i, 'data'); // đổi 'data' nếu bạn đặt tên field binary khác\n    const mime = item.binary.data.mimeType || \"image/jpeg\";\n    const base64 = buffer.toString('base64');\n    const dataUri = `data:${mime};base64,${base64}`;\n\n    html = html.replace(/src=\"https:\\/\\/drive\\.google\\.com\\/[^\"]+\"/g, `src=\"${dataUri}\"`);\n    console.log(`✅ Slide ${j.slide_index}: Đã nhúng base64 thật, dung lượng ${(base64.length/1024).toFixed(0)}KB`);\n  } else {\n    console.log(`⚠️ Slide ${j.slide_index}: Không có binary ảnh, giữ nguyên link Drive`);\n  }\n\n  results.push({\n    json: { ...j, clean_html: html }\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2848,
+        880
+      ],
+      "id": "b02c9349-9fb3-4303-a1c5-807e65d6e302",
+      "name": "Chèn Base64 Vào HTML"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1760,
+        1200
+      ],
+      "id": "1128da1b-f4e3-44b1-a3e8-a4830aacbdf5",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1712,
+        912
+      ],
+      "id": "b6616817-130d-4ffe-a3a9-65aa2aec98a4",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "EBdscX6wDUrkijGM",
+          "name": "khangvskiss24"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Tạo Content": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Kiểm tra trạng thái hiện tại",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Xử lý gom các nội dung trùng": {
+      "main": [
+        [
+          {
+            "node": "Gemini tạo Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini tạo Content": {
+      "main": [
+        [
+          {
+            "node": "Code chuẩn hóa đầu ra1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code chuẩn hóa đầu ra1": {
+      "main": [
+        [
+          {
+            "node": "Thêm Nội Dung AI Gen vào Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lấy Option Content": {
+      "main": [
+        [
+          {
+            "node": "Liệt Kê Ảnh Trong Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Liệt Kê Ảnh Trong Folder": {
+      "main": [
+        [
+          {
+            "node": "If Có Ảnh Không",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Có Ảnh Không": {
+      "main": [
+        [
+          {
+            "node": "Gộp tất cả ảnh cho AI đọc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gộp tất cả ảnh cho AI đọc": {
+      "main": [
+        [
+          {
+            "node": "AI Tự chọn ảnh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Tự chọn ảnh": {
+      "main": [
+        [
+          {
+            "node": "Tách ảnh từ nhiều link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tách ảnh từ nhiều link": {
+      "main": [
+        [
+          {
+            "node": "Tải Ảnh & Gộp Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tải Ảnh & Gộp Binary": {
+      "main": [
+        [
+          {
+            "node": "VISUAL BRIEF BUILDER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Lấy Option Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kiểm tra trạng thái hiện tại": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đăng Bài": {
+      "main": [
+        [
+          {
+            "node": "Cấu Hình Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lấy tất cả bài": {
+      "main": [
+        [
+          {
+            "node": "Lấy Option content, đã có thời gian đăng",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lấy link Media": {
+      "main": [
+        [
+          {
+            "node": "Đếm số ảnh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kiểm tra có Media không": {
+      "main": [
+        [
+          {
+            "node": "Phân Loại File (Ảnh hay Video)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tải Ảnh Về": {
+      "main": [
+        [
+          {
+            "node": "Xử lý Metadata AI nếu có",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gom Ảnh & Dựng Bài": {
+      "main": [
+        [
+          {
+            "node": "FB Đăng Bài (Ảnh)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FB Upload Ảnh Chờ": {
+      "main": [
+        [
+          {
+            "node": "Gom Ảnh & Dựng Bài",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Xử lý Metadata AI nếu có": {
+      "main": [
+        [
+          {
+            "node": "FB Upload Ảnh Chờ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update trạng thái": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Phân loại Media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lấy Option content, đã có thời gian đăng": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phân loại Media": {
+      "main": [
+        [
+          {
+            "node": "Lấy link Media",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "FB Upload Direct URL Ảnh",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gom Ảnh & Dựng Bài",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đếm số ảnh": {
+      "main": [
+        [
+          {
+            "node": "Kiểm tra có Media không",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phân Loại File (Ảnh hay Video)": {
+      "main": [
+        [
+          {
+            "node": "Tải Ảnh Về",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Đếm & Kiểm Tra Nhiều Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cấu Hình Token": {
+      "main": [
+        [
+          {
+            "node": "Lấy tất cả bài",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FB Đăng Bài (Ảnh)": {
+      "main": [
+        [
+          {
+            "node": "Update trạng thái",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FB Đăng bài + Video": {
+      "main": [
+        [
+          {
+            "node": "Đánh dấu Posted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FB Upload Direct URL Ảnh": {
+      "main": [
+        [
+          {
+            "node": "Gom Ảnh & Dựng Bài",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đếm & Kiểm Tra Nhiều Video": {
+      "main": [
+        [
+          {
+            "node": "Có Cần AI Chọn Không",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Có Cần AI Chọn Không": {
+      "main": [
+        [
+          {
+            "node": "Tách Danh Sách Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tách Danh Sách Video": {
+      "main": [
+        [
+          {
+            "node": "Lấy Thumbnail Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lấy Thumbnail Link": {
+      "main": [
+        [
+          {
+            "node": "Tải Ảnh Thumbnail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tải Ảnh Thumbnail": {
+      "main": [
+        [
+          {
+            "node": "Gộp Thumbnail Cho AI Đọc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gộp Thumbnail Cho AI Đọc": {
+      "main": [
+        [
+          {
+            "node": "Chọn Video Theo Thumbnail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chọn Video Theo Thumbnail": {
+      "main": [
+        [
+          {
+            "node": "Parse & Làm Sạch Tên",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Làm Sạch Tên": {
+      "main": [
+        [
+          {
+            "node": "Đổi Tên Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đổi Tên Video": {
+      "main": [
+        [
+          {
+            "node": "Chuẩn Hoá Item Video Đã Chọn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chuẩn Hoá Item Video Đã Chọn": {
+      "main": [
+        [
+          {
+            "node": "FB Đăng bài + Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đánh dấu Posted": {
+      "main": [
+        [
+          {
+            "node": "Update trạng thái",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Xử lý gom các nội dung trùng",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Thêm Nội Dung AI Gen vào Sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VISUAL BRIEF BUILDER": {
+      "main": [
+        [
+          {
+            "node": "(Prompt Builder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "(Prompt Builder": {
+      "main": [
+        [
+          {
+            "node": "AI Sinh HTML Infographic",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "AI Sinh HTML Infographic": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chuẩn Hóa HTML": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gắn Ảnh vào HTML": {
+      "main": [
+        [
+          {
+            "node": "Chuẩn Hóa HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Chèn Base64 Vào HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chèn Base64 Vào HTML": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Gắn Ảnh vào HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Tự chọn ảnh",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "e1bf74ae-9276-45ca-ab7e-ccc2026458d6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ee382d8d9df118f5f5db568213f19a9e258661a5734d6d20fee953ebafae8522"
+  },
+  "nodeGroups": [],
+  "id": "B9Ibssxc54SiPJKR",
+  "tags": []
+}
