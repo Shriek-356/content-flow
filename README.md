@@ -1,68 +1,68 @@
 # Ecolar Content Automation Platform (Content Flow)
 
-He thong tu dong hoa sang tao, kiem duyet va phan phoi noi dung da kenh (TikTok, Facebook Fanpage, Facebook Group). He thong ket hop giua Google Workspace (Sheets, Drive), n8n Workflow Engine, Node.js Media Engine va Buffer API / TikTok Direct API.
+Hệ thống tự động hóa sáng tạo, kiểm duyệt và phân phối nội dung đa kênh (TikTok, Facebook Fanpage, Facebook Group). Hệ thống kết hợp giữa Google Workspace (Sheets, Drive), n8n Workflow Engine, Node.js Media Processor và Buffer API / TikTok Direct API.
 
 ---
 
-## Muc Luc
+## Mục Lục
 
-1. [Tong Quan He Thong](#tong-quan-he-thong)
-2. [Kien Truc He Thong](#kien-truc-he-thong)
-3. [Chi Tiet Cac Phan He Chuc Nang](#chi-tiet-cac-phan-he-chuc-nang)
-   - [Phan he 1: Quan ly Content va Dong bo Google Sheets](#phan-he-1-quan-ly-content-va-dong-bo-google-sheets)
-   - [Phan he 2: Dieu khien n8n va Giam sat Tu dong](#phan-he-2-dieu-khien-n8n-va-giam-sat-tu-dong)
-   - [Phan he 3: Quan ly Hang doi va Duyet dang Buffer](#phan-he-3-quan-ly-hang-doi-va-duyet-dang-buffer)
-   - [Phan he 4: Dang truc tiep khong qua Sheets (Direct Publisher)](#phan-he-4-dang-truc-tiep-khong-qua-sheets-direct-publisher)
-   - [Phan he 5: Xu ly Media va Render Engine](#phan-he-5-xu-ly-media-va-render-engine)
-   - [Phan he 6: Background Worker va Dong bo Ket qua](#phan-he-6-background-worker-va-dong-bo-ket-qua)
-4. [Co Che Bao Mat va Phan Quyen (Mutation Guard)](#co-che-bao-mat-va-phan-quyen-mutation-guard)
-5. [Cau Truc Thu Muc](#cau-truc-thu-muc)
-6. [Yeu Cau He Thong](#yeu-cau-he-thong)
-7. [Huong Dan Cai Dat va Khoi Chay](#huong-dan-cai-dat-va-khoi-chay)
-8. [Danh Sach Giao Dien Web Dashboard](#danh-sach-giao-dien-web-dashboard)
-9. [Bang Tham Chieu Bien Moi Truong (.env)](#bang-tham-chieu-bien-moi-truong-env)
-10. [Nguyen Tac Bao Mat Thong Tin Du An](#nguyen-tac-bao-mat-thong-tin-du-an)
-
----
-
-## Tong Quan He Thong
-
-Ecolar Content Automation Platform la giai phap toan dien giup van hanh chuoi san xuat noi dung marketing:
-- **Thu thap va Khoi tao y tuong:** Luu tru prompt, chu de va thong tin san pham tren Google Sheets.
-- **Tu dong hoa sang tao noi dung bang AI:** n8n ket hop mo hinh Google Gemini va OpenAI de sinh 3 phuong an bai viet (Option 1, Option 2, Option 3), dong thoi sinh anh minh hoa hoac trigger render.
-- **Kiem duyet va Hieu chinh tap trung:** Cung cap Dashboard giao dien truc quan giup Content Leader xem truoc anh tu Drive, chon option toi uu, sua caption va duyet hang loat.
-- **Phan phoi da kenh tu dong:** Day bai sang Buffer de phan phoi toi TikTok, Facebook Fanpage, Facebook Group, hoac xuat ban truc tiep qua TikTok Content Posting API.
-- **Khep kin vong doi du lieu:** Background worker theo doi trang thai bai dang tren Buffer, khi xuat ban thanh cong se lay permalink bai viet thuc te ghi nguoc ve Google Sheets phuc vu do luong va luu tru.
+1. [Tổng Quan Hệ Thống](#tổng-quan-hệ-thống)
+2. [Kiến Trúc Hệ Thống](#kiến-trúc-hệ-thống)
+3. [Chi Tiết Các Phân Hệ Chức Năng](#chi-tiết-các-phân-hệ-chức-năng)
+   - [Phân hệ 1: Quản lý Content và Đồng bộ Google Sheets](#phân-hệ-1-quản-lý-content-và-đồng-bộ-google-sheets)
+   - [Phân hệ 2: Điều khiển n8n và Giám sát Tự động](#phân-hệ-2-điều-khiển-n8n-và-giám-sát-tự-động)
+   - [Phân hệ 3: Quản lý Hàng đợi và Duyệt đăng Buffer](#phân-hệ-3-quản-lý-hàng-đợi-và-duyệt-đăng-buffer)
+   - [Phân hệ 4: Đăng trực tiếp không qua Sheets (Direct Publisher)](#phân-hệ-4-đăng-trực-tiếp-không-qua-sheets-direct-publisher)
+   - [Phân hệ 5: Xử lý Media và Render Engine](#phân-hệ-5-xử-lý-media-và-render-engine)
+   - [Phân hệ 6: Background Worker và Tự động Cập nhật Báo cáo](#phân-hệ-6-background-worker-và-tự-động-cập-nhật-báo-cáo)
+4. [Cơ Chế Bảo Mật và Phân Quyền (Mutation Guard)](#cơ-chế-bảo-mật-và-phân-quyền-mutation-guard)
+5. [Cấu Trúc Thư Mục](#cấu-trúc-thư-mục)
+6. [Yêu Cầu Hệ Thống](#yêu-cầu-hệ-thống)
+7. [Hướng Dẫn Cài Đặt và Khởi Chạy](#hướng-dẫn-cài-đặt-và-khởi-chạy)
+8. [Danh Sách Giao Diện Web Dashboard](#danh-sách-giao-diện-web-dashboard)
+9. [Bảng Tham Chiếu Biến Môi Trường (.env)](#bảng-tham-chiếu-biến-môi-trường-env)
+10. [Nguyên Tắc Bảo Mật Thông Tin Dự Án](#nguyên-tắc-bảo-mật-thông-tin-dự-án)
 
 ---
 
-## Kien Truc He Thong
+## Tổng Quan Hệ Thống
 
-He thong van hanh dua tren mo hinh 4 tang doc lap:
+Ecolar Content Automation Platform là giải pháp toàn diện giúp vận hành chuỗi sản xuất và phân phối nội dung tiếp thị:
+- **Thu thập và Khởi tạo ý tưởng:** Lưu trữ chủ đề, prompt và thông tin định hướng trên Google Sheets.
+- **Tự động hóa sáng tạo nội dung bằng AI:** n8n tích hợp mô hình Google Gemini và OpenAI để sinh 3 phương án bài viết (Option 1, Option 2, Option 3), đồng thời hỗ trợ sinh ảnh minh họa hoặc kích hoạt bộ render.
+- **Kiểm duyệt và Hiệu chỉnh tập trung:** Cung cấp Web Dashboard giao diện trực quan giúp Content Leader xem trước hình ảnh từ Drive, chọn option tối ưu, biên tập caption và duyệt hàng loạt.
+- **Phân phối đa kênh tự động:** Đẩy bài sang Buffer để phân phối tới TikTok, Facebook Fanpage, Facebook Group, hoặc xuất bản trực tiếp qua TikTok Content Posting API.
+- **Khép kín vòng đời dữ liệu:** Background worker liên tục theo dõi trạng thái bài đăng trên Buffer, khi xuất bản thành công sẽ tự động lấy permalink thực tế ghi ngược về Google Sheets phục vụ báo cáo và lưu trữ.
+
+---
+
+## Kiến Trúc Hệ Thống
+
+Hệ thống vận hành dựa trên mô hình 4 tầng độc lập kết nối qua REST API nội bộ:
 
 ```
 +-----------------------------------------------------------------------------+
-| TANG 1: DU LIEU & TAI NGUYEN (Google Cloud Platform)                        |
-| - Google Sheets: Tab "Content Selector" (lap ke hoach) va "Publish Content" |
-| - Google Drive: Thu muc chua media goc (video raw, anh chup thuc te)        |
+| TẦNG 1: DỮ LIỆU & TÀI NGUYÊN (Google Cloud Platform)                        |
+| - Google Sheets: Tab "Content Selector" (kế hoạch) và "Publish Content"     |
+| - Google Drive: Thư mục chứa media gốc (video raw, ảnh thực tế)             |
 +--------------------------------------|--------------------------------------+
                                        |
 +--------------------------------------v--------------------------------------+
-| TANG 2: N8N WORKFLOW ENGINE (Docker: Port 5678)                             |
+| TẦNG 2: N8N WORKFLOW ENGINE (Docker: Port 5678)                             |
 | - Workflow: content-flow-V2-official.json (112 nodes)                       |
-| - Cac trigger: Manual Trigger, Schedule Cron, Webhook Receiver              |
+| - Các trigger: Manual Trigger, Schedule Cron, Webhook Receiver              |
 | - AI Agents: Google Gemini (Chat & Text), OpenAI                            |
 +--------------------------------------|--------------------------------------+
-                                       | (Goi API noi bo: host.docker.internal:3001)
+                                       | (Gọi API nội bộ: host.docker.internal:3001)
 +--------------------------------------v--------------------------------------+
-| TANG 3: BACKEND NODE.JS HELPER & DASHBOARD (Express: Port 3001)             |
+| TẦNG 3: BACKEND NODE.JS HELPER & DASHBOARD (Express: Port 3001)             |
 | - Web Dashboard: Portal Hub, Content Management, Buffer Manager, Automation |
 | - Media Processor: FFmpeg Watermark, Puppeteer HTML Render, Sharp Panorama  |
-| - Background Worker: Kiem tra Buffer queue moi 45 giay va dong bo Sheets    |
+| - Background Worker: Quét hàng đợi Buffer mỗi 45 giây và đồng bộ Sheets     |
 +--------------------------------------|--------------------------------------+
                                        | (Buffer GraphQL API / Direct Social APIs)
 +--------------------------------------v--------------------------------------+
-| TANG 4: KENH XUAT BAN & PHAN PHOI                                           |
+| TẦNG 4: KÊNH XUẤT BẢN & PHÂN PHỐI                                           |
 | - TikTok Channel                                                            |
 | - Facebook Fanpage                                                          |
 | - Facebook Group                                                            |
@@ -71,258 +71,258 @@ He thong van hanh dua tren mo hinh 4 tang doc lap:
 
 ---
 
-## Chi Tiet Cac Phan He Chuc Nang
+## Chi Tiết Các Phân Hệ Chức Năng
 
-### Phan he 1: Quan ly Content va Dong bo Google Sheets
-- **Duong dan truy cap:** `http://localhost:3001/content` va `http://localhost:3001/content/:row_number`
-- **Dong bo hai chieu:**
-  - Doc danh sach hang tu tab `Content Selector`.
-  - Hien thi du lieu theo hai che do: Card View (the truc quan) va Table View (bang chi tiet).
-  - Ho tro loc nhanh theo trang thai (`Chua duyet`, `Da duyet`, `Loi`, `Da dang`) va kenh phan phoi (`TikTok`, `FB Page`, `FB Group`).
-- **Thao tac hang loat (Bulk Actions):**
-  - `Approve Batch`: Phe duyet hang loat noi dung duoc chon.
-  - `Schedule Batch`: Phan bo gio dang tu dong cach nhau theo khoang thoi gian duoc thiet lap.
-  - `Channel Batch`: Chuyen doi kenh xuat ban dong loat cho nhieu bai.
-  - `Delete Batch`: Xoa du lieu tren Google Sheets truc tiep tu giao dien.
-  - `Publish Selected`: Day truc tiep cac bai da duyet sang Buffer khong can cho cron.
-- **Trang bien tap chi tiet bai viet:**
-  - Chon 1 trong 3 Option noi dung do AI sinh ra.
-  - Chinh sua Tieu de, Caption, Hashtag va Thoi gian xuat ban.
-  - Tich hop lay thumbnail xem truoc tu thu muc Google Drive dinh kem.
-  - Sao chep noi dung (Duplicate Post): Goi webhook n8n de nhan ban noi dung sang mot hang moi.
+### Phân hệ 1: Quản lý Content và Đồng bộ Google Sheets
+- **Đường dẫn truy cập:** `http://localhost:3001/content` và `http://localhost:3001/content/:row_number`
+- **Đồng bộ hai chiều:**
+  - Đọc và hiển thị danh sách bài viết từ tab `Content Selector`.
+  - Cung cấp hai chế độ hiển thị: Card View (dạng thẻ trực quan) và Table View (dạng bảng dữ liệu).
+  - Hỗ trợ lọc nhanh theo trạng thái (`Chưa duyệt`, `Đã duyệt`, `Lỗi`, `Đã đăng`) và theo kênh (`TikTok`, `FB Page`, `FB Group`).
+- **Thao tác hàng loạt (Bulk Actions):**
+  - `Approve Batch`: Phê duyệt đồng thời nhiều bài viết đã chọn.
+  - `Schedule Batch`: Tự động phân bổ lịch hẹn đăng cách nhau theo khoảng thời gian tùy chọn.
+  - `Channel Batch`: Đổi kênh xuất bản hàng loạt.
+  - `Delete Batch`: Xóa dữ liệu trên Google Sheets trực tiếp từ Dashboard.
+  - `Publish Selected`: Đẩy trực tiếp các bài đã duyệt sang hàng đợi Buffer mà không cần chờ lịch quét định kỳ.
+- **Trang biên tập chi tiết bài viết:**
+  - Lựa chọn 1 trong 3 phương án nội dung do AI tạo ra (Option 1, 2, 3).
+  - Hiệu chỉnh Tiêu đề, Caption, Hashtag và Thời gian xuất bản.
+  - Tự động lấy ảnh thu nhỏ (Thumbnails) từ liên kết Google Drive đính kèm.
+  - Tính năng nhân bản bài viết (Duplicate Post): Kích hoạt webhook n8n để sao chép bài viết sang hàng mới.
 
-### Phan he 2: Dieu khien n8n va Giam sat Tu dong
-- **Duong dan truy cap:** `http://localhost:3001/automation`
-- **Kiem soat trang thai n8n:**
-  - Health check trang thai container n8n dang chay hay dung.
-  - Hien thi thong tin ve phien thuc thi gan nhat (Execution status, Start time, Duration).
-- **Kich hoat luong tu dong khong can mo n8n:**
-  - `Tao Content`: Goi Webhook `trigger-generate-content` hoac Management API.
-  - `Tao Anh AI`: Goi Webhook `trigger-generate-images`.
-  - `Dang Bai`: Goi Webhook `trigger-publish`.
-  - `Xu ly theo dong`: Kich hoat chay quy trinh cho duy nhat mot so thu tu dong cu the tren Sheet.
-- **Co che dung khan cap:**
-  - Nut `Dung khan cap`: Ket noi toi n8n API de huy cac execution dang chay treo.
+### Phân hệ 2: Điều khiển n8n và Giám sát Tự động
+- **Đường dẫn truy cập:** `http://localhost:3001/automation`
+- **Kiểm soát trạng thái n8n:**
+  - Health check trạng thái Docker container n8n (`Running` / `Stopped`).
+  - Hiển thị thông tin phiên thực thi gần nhất (Execution Status, Start time, Duration).
+- **Kích hoạt luồng trực tiếp không cần mở canvas n8n:**
+  - `Tạo Content`: Gọi Webhook `trigger-generate-content` hoặc Management API.
+  - `Tạo Ảnh AI`: Gọi Webhook `trigger-generate-images`.
+  - `Đăng Bài`: Gọi Webhook `trigger-publish`.
+  - `Xử lý theo dòng`: Kích hoạt quy trình cho duy nhất một số dòng cụ thể trên Google Sheets.
+- **Cơ chế dừng khẩn cấp:**
+  - Nút `Dừng khẩn cấp`: Kết nối n8n API để dừng ngay các execution đang chạy hoặc bị treo.
 - **Live Server Logs:**
-  - Truyen thong tin log thoi gian thuc tu Express server qua Server-Sent Events (SSE).
+  - Truyền phát log thời gian thực từ Express server về trình duyệt qua Server-Sent Events (SSE).
 
-### Phan he 3: Quan ly Hang doi va Duyet dang Buffer
-- **Duong dan truy cap:** `http://localhost:3001/buffer`
-- **Quan ly hang doi da kenh:**
-  - Theo doi cac bai viet dang nam trong Queue cua tung kenh (`TikTok`, `FB Page`, `FB Group`).
-  - Kiem tra han muc quota con lai trong thang tren tung kenh Buffer.
-- **Xuat ban ngay lap tuc (Publish Now):**
-  - Bo qua thoi gian hen gio, day bai viet dang ngay lap tuc len mang xa hoi.
-- **Quan tri hang doi:**
-  - Chinh sua caption, doi lich dang (re-schedule) hoac xoa bai khoi hang doi Buffer.
-  - Lam moi link anh/video da het han (refresh signed media URLs).
-  - Cap nhat hoac thay the `BUFFER_ACCESS_TOKEN` truc tiep tren Dashboard.
+### Phân hệ 3: Quản lý Hàng đợi và Duyệt đăng Buffer
+- **Đường dẫn truy cập:** `http://localhost:3001/buffer`
+- **Quản lý hàng đợi đa kênh:**
+  - Theo dõi bài viết đang nằm trong Queue của từng kênh riêng biệt (`TikTok`, `FB Page`, `FB Group`).
+  - Kiểm tra hạn mức bài đăng còn lại trong tháng trên từng kênh (`Buffer Quota`).
+- **Xuất bản ngay lập tức (Publish Now):**
+  - Bỏ qua lịch hẹn, đẩy bài viết xuất bản ngay lập tức lên mạng xã hội.
+- **Quản trị hàng đợi:**
+  - Chỉnh sửa nội dung caption, đổi giờ hẹn đăng hoặc xóa bài khỏi hàng đợi Buffer.
+  - Làm mới liên kết media đã hết hạn (refresh signed URLs).
+  - Cập nhật hoặc đổi `BUFFER_ACCESS_TOKEN` trực tiếp ngay trên giao diện.
 
-### Phan he 4: Dang truc tiep khong qua Sheets (Direct Publisher)
-- Tinh nang danh cho tinh huong cap bach:
-  - Nhap truc tiep duong link file video hoac thu muc anh tren Google Drive.
-  - Nhap caption, hashtags va chon kenh muon dang.
-  - Backend tu dong tai file, xu ly watermark, upload va day sang kenh ma khong can qua quy trinh tao hang tren Sheets.
+### Phân hệ 4: Đăng trực tiếp không qua Sheets (Direct Publisher)
+- Phục vụ các tình huống phát sinh khẩn cấp:
+  - Nhập trực tiếp đường dẫn video hoặc thư mục ảnh từ Google Drive.
+  - Nhập caption, hashtag và chọn kênh xuất bản.
+  - Backend tự động tải file, xử lý watermark, tối ưu dung lượng và đẩy thẳng sang Buffer hoặc Direct API mà không cần tạo dòng trên Sheets.
 
-### Phan he 5: Xu ly Media va Render Engine
-- **Video Watermarking (`POST /watermark-video`):**
-  - Su dung binary `ffmpeg-static` tich hop san.
-  - Dong logo thuong hieu (`assets/logo.png` hoac `ecolar-logo.png`) vao video theo toa do va kich thuoc tuy bien.
-- **Render Banner tu HTML (`POST /render-html`, `POST /render-template`):**
-  - Khoi tao Headless Chromium qua `puppeteer`.
-  - Nap template HTML/CSS kem du lieu dong de render ra file anh PNG/JPEG chat luong cao.
-- **Xu ly va Cat anh Panorama (`POST /split-panorama`):**
-  - Su dung thu vien `sharp` de cat 1 anh dai thanh 2-3 anh vuong phuc vu dang album vuot carousel.
+### Phân hệ 5: Xử lý Media và Render Engine
+- **Đóng Watermark Video (`POST /watermark-video`):**
+  - Sử dụng binary `ffmpeg-static` tích hợp sẵn.
+  - Tải video từ Drive, ghép logo thương hiệu (`assets/logo.png` hoặc `ecolar-logo.png`) vào video theo tọa độ, độ mờ và kích thước mong muốn.
+- **Render Banner từ HTML/CSS (`POST /render-html`, `POST /render-template`):**
+  - Khởi tạo Headless Chrome qua `puppeteer`.
+  - Nạp template mẫu (quote, infographic, thông báo) kèm biến động để chụp ảnh PNG/JPEG chất lượng cao.
+- **Xử lý và Cắt ảnh Panorama (`POST /split-panorama`):**
+  - Sử dụng thư viện `sharp` để cắt 1 ảnh toàn cảnh thành 2-3 ảnh vuông tỉ lệ 1:1, phục vụ đăng album ảnh vuốt mượt trên mạng xã hội.
 - **Facebook Resumable Upload (`POST /upload-video`):**
-  - Ho tro upload cac video dung luong lon len Facebook Graph API theo giao thuc chunked upload, chong dut ket noi giua chung.
+  - Hỗ trợ tải các video dung lượng lớn lên Facebook Graph API theo giao thức phân đoạn (chunked resumable upload), tránh lỗi timeout.
 - **TikTok Direct Posting API (`/tiktok/*`):**
-  - Xac thuc OAuth 2.0 va luu token cuc bo.
-  - Ho tro dang video va dang album anh truc tiep thong qua TikTok Content Posting API v2.
+  - Xác thực OAuth 2.0 lưu token cục bộ.
+  - Hỗ trợ đăng video và album ảnh trực tiếp qua TikTok Content Posting API v2.
 
-### Phan he 6: Background Worker va Dong bo Ket qua
-- Trong file `index.js`, mot interval worker duoc khoi chay ngam:
-  - Chu ky: Moi 45 giay (va 5 giay dau sau khi server khoi dong).
-  - Chuc nang: Doc tep tin `data/tracked_queue.json`, kiem tra trang thai cac bai viet da den han tren Buffer.
-  - Khi Buffer xac nhan trang thai `sent`: Lay ID bai viet va URL thuc te, ghi vao tab Google Sheet `Publish Content`, cap nhat thoi gian dang va danh dau hoan thanh.
+### Phân hệ 6: Background Worker và Tự động Cập nhật Báo cáo
+- Trong `index.js`, một tác vụ nền được thiết lập chạy định kỳ:
+  - Chu kỳ: Mỗi 45 giây (và chạy lần đầu 5 giây sau khi bật server).
+  - Hoạt động: Đọc danh sách theo dõi từ file `data/tracked_queue.json`, truy vấn trạng thái bài viết từ Buffer GraphQL API.
+  - Khi bài viết chuyển sang trạng thái `sent`: Thu thập ID bài đăng và permalink thực tế trên mạng xã hội, ghi trực tiếp vào tab `Publish Content` của Google Sheets, cập nhật mốc thời gian hoàn thành.
 
 ---
 
-## Co Che Bao Mat va Phan Quyen (Mutation Guard)
+## Cơ Chế Bảo Mật và Phân Quyền (Mutation Guard)
 
-Express Backend duoc trang bi middleware kiem soat truy cap nghiem ngat (`mutationGuard`) nham bao ve he thong khi mo tunnel ra Internet (vi du qua ngrok):
+Express Backend tích hợp middleware kiểm soát truy cập nghiêm ngặt (`mutationGuard`) nhằm bảo vệ máy chủ khi mở public qua reverse proxy (như ngrok):
 
-1. **Pham vi ap dung:** Ap dung cho toan bo cac route thay doi du lieu hoac tieu ton tai nguyen:
+1. **Phạm vi bảo vệ:** Áp dụng cho mọi route thay đổi dữ liệu hoặc tiêu tốn tài nguyên hệ thống:
    - `/api/*`
    - `/upload-*`
    - `/render-*`
    - `/watermark-video`
    - `/split-panorama`
    - `/edit-image-openai`
-   - `/tiktok/*` (ngoai tru `/tiktok/callback` de tiep nhan redirect tu TikTok)
-2. **Dieu kien cho phep:**
-   - Request xuat phat tu Dashboard co Header `Referer` hoac `Origin` trung khop voi hostname cua server.
-   - Request noi bo khong qua proxy nguoc (khong co `X-Forwarded-For` va IP la Loopback `127.0.0.1`, `localhost` hoac dai IP mang LAN noi bo `10.x`, `192.168.x`, `172.x`).
-3. **Ket qua khi vi pham:** Server tu choi lap tuc voi HTTP 403 Forbidden va ghi log canh bao.
+   - `/tiktok/*` (ngoại trừ `/tiktok/callback` để đón redirect OAuth từ TikTok)
+2. **Tiêu chuẩn cho phép:**
+   - Request xuất phát từ giao diện Dashboard có Header `Referer` hoặc `Origin` khớp với hostname của server.
+   - Request nội bộ trực tiếp không qua reverse proxy (không có `X-Forwarded-For`, IP là Loopback `127.0.0.1`, `localhost` hoặc dải mạng riêng `10.x`, `192.168.x`, `172.x`).
+3. **Phản hồi khi vi phạm:** Trả về mã lỗi HTTP 403 Forbidden và ghi log cảnh báo tới hệ thống.
 
 ---
 
-## Cau Truc Thu Muc
+## Cấu Trúc Thư Mục
 
 ```plaintext
 content-flow/
-|-- assets/                         # Tep tin logo, anh mau thuong hieu
+|-- assets/                         # Tài nguyên logo, watermark, ảnh mẫu
 |-- data/
-|   `-- tracked_queue.json          # File luu trang thai hang doi de background worker theo doi
-|-- public/                         # Tai nguyen tinh cho giao dien
-|-- templates/                      # Cac file giao dien Dashboard (HTML, CSS, JS)
-|   |-- automation.html             # Giao dien dieu khien n8n, Direct Publish va Live Logs
-|   |-- buffer.html                 # Giao dien quan ly hang doi va quota Buffer
-|   |-- content-detail.html         # Giao dien bien tap chi tiet bai viet & chon option
-|   `-- content-list.html           # Giao dien danh sach bai viet, loc va thao tac hang loat
+|   `-- tracked_queue.json          # Danh sách bài đăng đang được background worker theo dõi
+|-- public/                         # File tĩnh phục vụ giao diện
+|-- templates/                      # Các trang giao diện Web Dashboard
+|   |-- automation.html             # Điều khiển n8n, Direct Publisher và Live Logs
+|   |-- buffer.html                 # Quản lý hàng đợi và quota Buffer
+|   |-- content-detail.html         # Biên tập nội dung chi tiết & duyệt option AI
+|   `-- content-list.html           # Danh sách bài viết từ Sheets & thao tác hàng loạt
 |-- src/
-|   |-- routes/                     # Dinh nghia cac route API Express
-|   |   |-- dashboard.routes.js     # API phuc vu Dashboard va dieu phoi he thong
-|   |   |-- facebook.routes.js      # API Facebook Graph (anh, video, reels)
-|   |   |-- image.routes.js         # API cat anh, AI edit anh
-|   |   |-- render.routes.js        # API render HTML/CSS thanh anh qua Puppeteer
-|   |   |-- tiktok.routes.js        # API TikTok OAuth va Content Posting
-|   |   `-- video.routes.js         # API tai Drive va dong watermark video
-|   |-- services/                   # Xu ly logic nghiep vu
-|   |   |-- buffer.service.js       # Buffer GraphQL client va logic dong bo
-|   |   |-- cloudinary.service.js   # Tich hop Cloudinary SDK
+|   |-- routes/                     # Các module định tuyến Express
+|   |   |-- dashboard.routes.js     # Router chính phục vụ Dashboard và các API quản trị
+|   |   |-- facebook.routes.js      # Router upload Facebook Graph (ảnh, video, reels)
+|   |   |-- image.routes.js         # Router xử lý cắt ghép ảnh, AI edit
+|   |   |-- render.routes.js        # Router render HTML sang ảnh qua Puppeteer
+|   |   |-- tiktok.routes.js        # Router xác thực và upload TikTok API
+|   |   `-- video.routes.js         # Router tải Drive và watermark video
+|   |-- services/                   # Xử lý nghiệp vụ logic
+|   |   |-- buffer.service.js       # Buffer GraphQL client và worker đồng bộ
+|   |   |-- cloudinary.service.js   # Cloudinary SDK client
 |   |   |-- facebook.service.js     # Facebook Graph API client
-|   |   |-- openai.service.js       # Tich hop OpenAI API
-|   |   |-- puppeteer.service.js    # Khoi tao va render anh qua Headless Chrome
-|   |   |-- sheets.service.js       # Google Sheets v4 va Google Drive v3 client
+|   |   |-- openai.service.js       # OpenAI API client
+|   |   |-- puppeteer.service.js    # Quản lý Headless Chrome render ảnh
+|   |   |-- sheets.service.js       # Google Sheets v4 và Drive v3 client
 |   |   |-- tiktok.service.js       # TikTok API client
-|   |   `-- watermark.service.js    # Xu ly video voi FFmpeg
-|   `-- utils/                      # Cac tien ich ho tro
-|       |-- drive.util.js           # Xu ly link va ID Google Drive
-|       |-- logger.util.js          # Ghi log he thong
-|       |-- mask.util.js            # Xu ly mask anh
-|       `-- posts.util.js           # Format va xu ly cau truc bai viet
-|-- .env.example                    # File mau khai bao bien moi truong
-|-- .gitignore                      # Danh sach loai tru khong commit vao Git
-|-- content-flow-V2-official.json   # Tep workflow n8n chinh thuc (112 nodes)
-|-- credentials.json                # Google Service Account Key (bao mat, khong commit)
-|-- index.html                      # Trang chu Portal dieu huong he thong
-|-- index.js                        # Diem khoi chay chinh cua ung dung Node.js
-|-- package.json                    # Khai bao goi phu thuoc va scripts
-`-- workflow_backup.json            # Ban sao luu workflow n8n
+|   |   `-- watermark.service.js    # Xử lý video với FFmpeg
+|   `-- utils/                      # Các module tiện ích
+|       |-- drive.util.js           # Xử lý liên kết và ID Google Drive
+|       |-- logger.util.js          # Hệ thống ghi log bộ nhớ và console
+|       |-- mask.util.js            # Tiện ích xử lý mask hình ảnh
+|       `-- posts.util.js           # Chuẩn hóa cấu trúc bài viết
+|-- .env.example                    # File mẫu cấu hình biến môi trường
+|-- .gitignore                      # Danh sách file và thư mục loại trừ khỏi Git
+|-- content-flow-V2-official.json   # File xuất workflow n8n chính thức (112 nodes)
+|-- credentials.json                # Khóa xác thực Google Service Account (bảo mật, không commit)
+|-- index.html                      # Trang điều hướng Portal trung tâm
+|-- index.js                        # Điểm khởi chạy chính của ứng dụng Express
+|-- package.json                    # Khai báo thư viện phụ thuộc và scripts
+`-- workflow_backup.json            # Bản sao lưu dự phòng của workflow n8n
 ```
 
 ---
 
-## Yeu Cau He Thong
+## Yêu Cầu Hệ Thống
 
-- **Node.js:** Toi thieu phien ban `18.x` tro len (khuyen nghi dung Node.js 20 LTS).
-- **npm:** Phien ban `9.x` tro len.
-- **Docker va Docker Compose:** De khoi chay n8n workflow engine tren cong `5678`.
-- **Tai khoan va Quyen truy cap API:**
-  - Google Cloud Project: Da bat Google Sheets API va Google Drive API, tao Service Account va tai file `credentials.json`.
-  - Buffer Account: Co tai khoan Buffer va tao Channel ket noi voi TikTok, Facebook Fanpage, Facebook Group.
-  - OpenAI / Google Gemini API Key: Can thiet cho cac node AI trong n8n.
+- **Node.js:** Phiên bản `18.x` trở lên (khuyến nghị Node.js 20 LTS).
+- **npm:** Phiên bản `9.x` trở lên.
+- **Docker & Docker Compose:** Dùng để chạy n8n workflow engine trên cổng `5678`.
+- **Tài khoản và Khóa truy cập dịch vụ:**
+  - Google Cloud Project: Bật Google Sheets API và Google Drive API, tạo Service Account và tải file `credentials.json`.
+  - Buffer Account: Kết nối các kênh TikTok, Facebook Fanpage, Facebook Group và lấy Access Token.
+  - OpenAI / Google Gemini API Key: Khai báo trong n8n phục vụ sinh nội dung.
 
 ---
 
-## Huong Dan Cai Dat va Khoi Chay
+## Hướng Dẫn Cài Đặt và Khởi Chạy
 
-### 1. Cai dat cac goi phu thuoc
-Chay lenh sau tai thu muc goc cua du an:
+### 1. Cài đặt các thư viện phụ thuộc
+Chạy lệnh sau tại thư mục gốc của dự án:
 ```bash
 npm install
 ```
 
-### 2. Thiet lap file bien moi truong (.env)
-Tao file `.env` tu file mau:
+### 2. Thiết lập biến môi trường (.env)
+Tạo file `.env` từ file mẫu:
 ```bash
 cp .env.example .env
 ```
-Dien day du cac thong so can thiet vao `.env` (xem chi tiet tai muc Bang Tham Chieu Bien Moi Truong).
+Điền các giá trị thực tế tương ứng với tài khoản của bạn (xem bảng tham chiếu bên dưới).
 
-### 3. Cau hinh Google Cloud Credentials
-1. Dat file `credentials.json` lay tu Google Cloud vao thu muc goc cua du an:
+### 3. Cấu hình xác thực Google Cloud
+1. Đặt file `credentials.json` lấy từ Google Cloud Console vào thư mục gốc dự án:
    ```plaintext
    content-flow/credentials.json
    ```
-2. Mo Google Sheet quan ly noi dung, nhan nut **Share** va them dia chi email cua Service Account (vi du: `content-bot@your-project.iam.gserviceaccount.com`) voi quyen **Editor**.
-3. Chia se thu muc Google Drive chua hinh anh/video cho email Service Account voi quyen tuong tu.
+2. Mở Google Sheet cần quản lý, nhấn nút **Share** và thêm email của Service Account (dạng `xxx@xxx.iam.gserviceaccount.com`) với quyền **Editor**.
+3. Chia sẻ thư mục Google Drive chứa hình ảnh/video cho email Service Account với quyền tương tự.
 
-### 4. Khoi chay Backend Server
-- Che do phat trien (ho tro tu dong khoi dong lai khi sua code):
+### 4. Khởi chạy Backend Server
+- Chế độ phát triển (tự động nạp lại khi cập nhật mã nguồn):
   ```bash
   npm run dev
   ```
-- Che do san sang hoat dong (Production):
+- Chế độ vận hành chính thức (Production):
   ```bash
   npm start
   ```
-Sau khi khoi dong, server mac dinh hoat dong tai dia chi: `http://localhost:3001`
+Sau khi chạy, máy chủ mở tại địa chỉ: `http://localhost:3001`
 
-### 5. Khoi chay va Import Workflow vao n8n
-1. Khoi chay n8n thong qua Docker:
+### 5. Khởi chạy và Nạp Workflow vào n8n
+1. Khởi chạy container n8n qua Docker:
    ```bash
    docker run -d --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n n8nio/n8n
    ```
-2. Truy cap `http://localhost:5678` tren trinh duyet.
-3. Chon **Import from File** va tai tep `content-flow-V2-official.json` vao.
-4. Gan thong tin Credentials (Google Sheets, Drive, Gemini, OpenAI) trong n8n va kich hoat workflow (Active).
-5. Lay API Key cua n8n (tai phan Settings > n8n API) va dien vao bien `N8N_API_KEY` trong file `.env` cua backend.
+2. Mở trình duyệt tại `http://localhost:5678`.
+3. Chọn **Import from File** và chọn file `content-flow-V2-official.json`.
+4. Cấu hình Credentials tương ứng (Google Sheets, Google Drive, Gemini, OpenAI) trong n8n và chuyển workflow sang trạng thái **Active**.
+5. Lấy API Key của n8n (Settings > n8n API) và khai báo vào biến `N8N_API_KEY` trong file `.env` của backend.
 
 ---
 
-## Danh Sach Giao Dien Web Dashboard
+## Danh Sách Giao Diện Web Dashboard
 
-| Dia chi URL | Ten man hinh | Chuc nang chinh |
+| Đường dẫn URL | Tên màn hình | Chức năng chính |
 | :--- | :--- | :--- |
-| `http://localhost:3001/` | Portal Navigation | Trang dieu huong tong quan den cac phan he |
-| `http://localhost:3001/content` | Content Hub | Danh sach bai viet, loc, thao tac duyet va hen gio hang loat |
-| `http://localhost:3001/content/:row` | Content Editor | Chinh sua noi dung, chon option AI, xem anh Drive cua 1 dong |
-| `http://localhost:3001/buffer` | Buffer Manager | Kiem tra hang doi tung kenh, xem quota, dang ngay lap tuc |
-| `http://localhost:3001/automation` | Automation Center | Theo doi n8n, kich hoat workflow, dang truc tiep, xem live logs |
+| `http://localhost:3001/` | Portal Navigation | Trang chủ điều hướng trung tâm |
+| `http://localhost:3001/content` | Content Hub | Danh sách bài viết, bộ lọc trạng thái, thao tác duyệt và hẹn giờ hàng loạt |
+| `http://localhost:3001/content/:row` | Content Editor | Chỉnh sửa nội dung, lựa chọn 1 trong 3 option AI, xem ảnh Drive của từng bài |
+| `http://localhost:3001/buffer` | Buffer Manager | Theo dõi hàng đợi từng kênh, kiểm tra quota, xuất bản ngay lập tức |
+| `http://localhost:3001/automation` | Automation Center | Giám sát n8n, kích hoạt workflow, đăng cứu hộ trực tiếp, xem live logs |
 
 ---
 
-## Bang Tham Chieu Bien Moi Truong (.env)
+## Bảng Tham Chiếu Biến Môi Trường (.env)
 
-| Ten bien | Yeu cau | Gia tri mac dinh | Giai thich chi tiet |
+| Tên biến | Yêu cầu | Giá trị mặc định | Giải thích chi tiết |
 | :--- | :---: | :--- | :--- |
-| `PORT` | Khong | `3001` | Cong Express server lang nghe |
-| `BASE_URL` | Co | `http://localhost:3001` | URL co so cua backend (Local hoac domain Ngrok) |
-| `GOOGLE_SHEET_ID` | Co | - | ID cua file Google Sheets quan ly bai viet |
-| `GOOGLE_SHEET_NAME` | Khong | `Content Selector` | Ten tab chua noi dung can phe duyet |
-| `GOOGLE_PUBLISH_SHEET_NAME` | Khong | `Publish Content` | Ten tab luu thong tin bai viet da dang |
-| `GOOGLE_SHEET_GID` | Khong | `2121812891` | GID cua tab Content Selector |
-| `GOOGLE_PUBLISH_SHEET_GID` | Khong | `743957638` | GID cua tab Publish Content |
-| `GOOGLE_SHEET_DATA_START_ROW` | Khong | `5` | Dong bat dau chua du lieu tren Sheet |
-| `GOOGLE_CREDENTIALS_PATH` | Khong | `./credentials.json` | Duong dan toi file Google Service Account |
-| `GOOGLE_API_KEY` | Khong | - | API Key Google (dung ho tro doc thumbnail Drive) |
-| `BUFFER_ACCESS_TOKEN` | Co | - | Token xac thuc truy van Buffer GraphQL API |
-| `BUFFER_TIKTOK_CHANNEL_ID` | Co | - | Channel ID cua kenh TikTok tren Buffer |
-| `BUFFER_FB_PAGE_CHANNEL_ID` | Co | - | Channel ID cua Facebook Fanpage tren Buffer |
-| `BUFFER_FB_GROUP_CHANNEL_ID` | Co | - | Channel ID cua Facebook Group tren Buffer |
-| `N8N_BASE_URL` | Khong | `http://localhost:5678` | Dia chi ket noi toi n8n service |
-| `N8N_API_KEY` | Co | - | API Key dung de kich hoat va dung execution tren n8n |
-| `N8N_WORKFLOW_ID` | Khong | `uWbys7XrXlEP1iy9` | ID cua workflow n8n can dieu khien |
-| `TIKTOK_CLIENT_KEY` | Khong | - | Client Key dang ky tren TikTok for Developers |
-| `TIKTOK_CLIENT_SECRET` | Khong | - | Client Secret dang ky tren TikTok for Developers |
-| `TIKTOK_REDIRECT_URI` | Khong | `{BASE_URL}/tiktok/callback` | Callback URL nhan OAuth code tu TikTok |
-| `CLOUDINARY_CLOUD_NAME` | Khong | - | Ten Cloud tren Cloudinary (neu su dung) |
-| `CLOUDINARY_API_KEY` | Khong | - | API Key Cloudinary |
-| `CLOUDINARY_API_SECRET` | Khong | - | API Secret Cloudinary |
+| `PORT` | Không | `3001` | Cổng dịch vụ Express lắng nghe |
+| `BASE_URL` | Có | `http://localhost:3001` | URL gốc của backend (Local hoặc tên miền Ngrok) |
+| `GOOGLE_SHEET_ID` | Có | - | ID của bảng tính Google Sheets quản lý bài viết |
+| `GOOGLE_SHEET_NAME` | Không | `Content Selector` | Tên tab chứa nội dung cần duyệt |
+| `GOOGLE_PUBLISH_SHEET_NAME` | Không | `Publish Content` | Tên tab lưu trữ thông tin các bài đã đăng |
+| `GOOGLE_SHEET_GID` | Không | `2121812891` | GID của tab Content Selector |
+| `GOOGLE_PUBLISH_SHEET_GID` | Không | `743957638` | GID của tab Publish Content |
+| `GOOGLE_SHEET_DATA_START_ROW` | Không | `5` | Dòng bắt đầu chứa dữ liệu bài viết |
+| `GOOGLE_CREDENTIALS_PATH` | Không | `./credentials.json` | Đường dẫn đến file Service Account JSON |
+| `GOOGLE_API_KEY` | Không | - | Google API Key (hỗ trợ đọc thumbnail Drive) |
+| `BUFFER_ACCESS_TOKEN` | Có | - | Token xác thực truy vấn Buffer GraphQL API |
+| `BUFFER_TIKTOK_CHANNEL_ID` | Có | - | Channel ID của kênh TikTok trên Buffer |
+| `BUFFER_FB_PAGE_CHANNEL_ID` | Có | - | Channel ID của Facebook Fanpage trên Buffer |
+| `BUFFER_FB_GROUP_CHANNEL_ID` | Có | - | Channel ID của Facebook Group trên Buffer |
+| `N8N_BASE_URL` | Không | `http://localhost:5678` | Địa chỉ kết nối tới n8n service |
+| `N8N_API_KEY` | Có | - | API Key dùng để kích hoạt và dừng execution trên n8n |
+| `N8N_WORKFLOW_ID` | Không | `uWbys7XrXlEP1iy9` | ID của workflow n8n cần điều khiển |
+| `TIKTOK_CLIENT_KEY` | Không | - | Client Key từ TikTok for Developers |
+| `TIKTOK_CLIENT_SECRET` | Không | - | Client Secret từ TikTok for Developers |
+| `TIKTOK_REDIRECT_URI` | Không | `{BASE_URL}/tiktok/callback` | Callback URL nhận OAuth code từ TikTok |
+| `CLOUDINARY_CLOUD_NAME` | Không | - | Tên Cloud trên Cloudinary (nếu sử dụng) |
+| `CLOUDINARY_API_KEY` | Không | - | API Key Cloudinary |
+| `CLOUDINARY_API_SECRET` | Không | - | API Secret Cloudinary |
 
 ---
 
-## Nguyen Tac Bao Mat Thong Tin Du An
+## Nguyên Tắc Bảo Mật Thông Tin Dự Án
 
-1. **Cam tuyet doi commit cac file bi mat len Git Repository:**
-   - Cac tep tin va thu muc sau bat buoc phai nam trong `.gitignore`:
-     - `.env` (chua toan bo token va secret key)
-     - `credentials.json` (chua private key cua Google Cloud Service Account)
-     - `token.json` va thu muc `tokens/` (chua OAuth token TikTok va cac mang xa hoi)
-     - `ngrok_backend.yml` (chua authtoken cua ngrok)
-     - `*.pem`, `*.key` (cac chung chi bao mat)
-2. **Kiem tra git status truoc khi commit:**
-   - Luon chay `git status` de xac nhan khong co file bi mat nao nam trong danh sach untracked truoc khi thuc hien `git add` va `git commit`.
-3. **Giao tiep giua Docker va Host:**
-   - Khi cau hinh n8n goi ve backend Node.js chay tren may host, khong dung `localhost:3001` ma su dung `http://host.docker.internal:3001`.
+1. **Tuyệt đối không commit các file bí mật lên Git Repository:**
+   - Các file và thư mục sau bắt buộc phải có trong `.gitignore`:
+     - `.env` (chứa toàn bộ token và secret key)
+     - `credentials.json` (chứa private key của Google Cloud Service Account)
+     - `token.json` và thư mục `tokens/` (chứa OAuth token của TikTok và mạng xã hội)
+     - `ngrok_backend.yml` (chứa authtoken của ngrok)
+     - `*.pem`, `*.key` (các chứng chỉ bảo mật)
+2. **Kiểm tra trạng thái Git trước khi commit:**
+   - Luôn chạy lệnh `git status` để đảm bảo không có file nhạy cảm nào nằm trong danh sách chuẩn bị commit (`Changes to be committed` hoặc `Untracked files`).
+3. **Giao tiếp giữa Docker và Máy chủ Host:**
+   - Khi cấu hình n8n trong Docker gọi về backend Node.js trên máy host, sử dụng `http://host.docker.internal:3001` thay vì `localhost:3001`.
