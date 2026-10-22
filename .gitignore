@@ -26,3 +26,11 @@ venv/
 
 # n8n backup (nếu có)
 *.sqlite
+
+# Credentials & Secrets
+credentials.json
+token.json
+tokens/
+*.pem
+*.key
+ngrok_backend.yml

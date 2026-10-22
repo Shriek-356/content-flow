@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ecolar Content Automation Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── TOP NAV ── */
+    nav.topnav {
+      background: #14532d;
+      border-bottom: 1px solid #0f3f22;
+      padding: 0 28px;
+      height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .nav-brand img {
+      height: 42px;
+      object-fit: contain;
+      image-rendering: -webkit-optimize-contrast;
+    }
+    .nav-brand-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-left: 1px solid rgba(255, 255, 255, 0.2);
+      padding-left: 12px;
+    }
+    .nav-brand-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .nav-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #86efac;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+    }
+
+    /* ── MAIN WRAPPER ── */
+    main.hub-container {
+      max-width: 920px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 24px 48px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ── HEADER INTRO ── */
+    .hub-header {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .hub-header-left {
+      max-width: 600px;
+    }
+    .hub-header-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.3px;
+    }
+    .hub-header-desc {
+      font-size: 13.5px;
+      color: #64748b;
+      margin-top: 6px;
+      line-height: 1.6;
+    }
+    .hub-meta-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-sheet {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .btn-sheet:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+      color: #0f172a;
+    }
+
+    /* ── OVERVIEW STATS ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 640px) {
+      .stats-row { grid-template-columns: 1fr; }
+    }
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .stat-info .stat-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .stat-info .stat-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-top: 2px;
+    }
+    .stat-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    /* ── NAVIGATION LIST (MỤC QUẢN LÝ BÌNH THƯỜNG) ── */
+    .nav-list-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+    .nav-list-header {
+      padding: 12px 20px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px;
+      border-bottom: 1px solid #f1f5f9;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.15s ease;
+    }
+    .nav-item:last-child {
+      border-bottom: none;
+    }
+    .nav-item:hover {
+      background: #f8fafc;
+    }
+
+    .nav-item-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+    }
+    .nav-item-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #e2e8f0;
+    }
+    .nav-item.item-content .nav-item-icon {
+      background: #f0fdf4;
+      color: #15803d;
+      border-color: #dcfce7;
+    }
+    .nav-item.item-buffer .nav-item-icon {
+      background: #f0f9ff;
+      color: #0284c7;
+      border-color: #e0f2fe;
+    }
+    .nav-item.item-automation .nav-item-icon {
+      background: #faf5ff;
+      color: #7e22ce;
+      border-color: #f3e8ff;
+    }
+    .nav-item.item-docs .nav-item-icon {
+      background: #fffbeb;
+      color: #b45309;
+      border-color: #fef3c7;
+    }
+
+    .nav-item-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .nav-item-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-item-desc {
+      font-size: 12.5px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    .nav-item-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-item-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #f1f5f9;
+      color: #475569;
+      white-space: nowrap;
+    }
+    .nav-item-btn {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #15803d;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .nav-item:hover .nav-item-btn {
+      background: #15803d;
+      color: #ffffff;
+      border-color: #15803d;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #64748b;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    footer a {
+      color: #334155;
+      font-weight: 600;
+      text-decoration: none;
+      margin-left: 14px;
+    }
+    footer a:hover {
+      color: #15803d;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <a class="nav-brand" href="/">
+      <img src="/assets/logo.png" alt="Ecolar Logo">
+      <div class="nav-brand-text">
+        <span class="nav-brand-name">Hệ Thống Tự Động Hóa Nội Dung</span>
+      </div>
+    </a>
+    <div class="nav-status">
+      <span class="status-dot"></span> Hệ thống đang vận hành
+    </div>
+  </nav>
+
+  <!-- MAIN HUB -->
+  <main class="hub-container">
+
+    <!-- HEADER INTRO -->
+    <header class="hub-header">
+      <div class="hub-header-left">
+        <h1 class="hub-header-title">Trung Tâm Điều Hành & Quản Lý Nội Dung</h1>
+        <p class="hub-header-desc">
+          Cổng điều phối quy trình sản xuất nội dung đa kênh, xuất bản truyền thông chính thức và theo dõi tự động hóa thương hiệu Ecolar.
+        </p>
+      </div>
+      <div class="hub-meta-actions">
+        <a href="#" id="sheet-link-btn" target="_blank" class="btn-sheet">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Mở Google Sheet
+        </a>
+      </div>
+    </header>
+
+    <!-- SYSTEM QUICK STATS -->
+    <section class="stats-row">
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Bảng Kế Hoạch</div>
+          <div class="stat-value" id="stat-total-posts">9 bài viết</div>
+        </div>
+        <span class="stat-badge">Content Selector</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Tiến Độ Duyệt</div>
+          <div class="stat-value" id="stat-ready-posts">1 sẵn sàng</div>
+        </div>
+        <span class="stat-badge" style="color: #15803d; background: #dcfce7;">Đã kiểm duyệt</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Luồng Tự Động Hóa</div>
+          <div class="stat-value" id="stat-n8n-status">n8n Online</div>
+        </div>
+        <span class="stat-badge">Webhook Active</span>
+      </div>
+    </section>
+
+    <!-- NAVIGATION LIST (MỤC QUẢN LÝ BÌNH THƯỜNG) -->
+    <section class="nav-list-card">
+      <div class="nav-list-header">
+        <span>Danh Mục Phân Hệ Quản Lý</span>
+        <span>4 phân hệ</span>
+      </div>
+
+      <nav class="nav-list">
+
+        <!-- 1. KẾ HOẠCH CONTENT -->
+        <a href="/content" class="nav-item item-content">
+          <div class="nav-item-left">
+            <div class="nav-item-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/>
+              </svg>
+            </div>
+            <div class="nav-item-content">
+              <div class="nav-item-title">
+                Bảng Kế Hoạch Content
+              </div>
+              <div class="nav-item-desc">
+                Quản lý ma trận bài viết từ Google Sheet, kiểm tra tiến độ kịch bản AI, duyệt option trước khi đăng.
+              </div>
+            </div>
+          </div>
+          <div class="nav-item-right">
+            <span class="nav-item-badge">Google Sheet Sync</span>
+            <span class="nav-item-btn">Vào quản lý →</span>
+          </div>
+        </a>
+
+        <!-- 2. BUFFER & ĐĂNG NHANH -->
+        <a href="/buffer" class="nav-item item-buffer">
+          <div class="nav-item-left">
+            <div class="nav-item-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+              </svg>
+            </div>
+            <div class="nav-item-content">
+              <div class="nav-item-title">
+                Quản Lý Bài Viết Buffer
+              </div>
+              <div class="nav-item-desc">
+                Theo dõi, quản lý và kiểm tra chi tiết các bài viết đã xuất bản hoặc bản nháp trực tiếp từ Buffer.
+              </div>
+            </div>
+          </div>
+          <div class="nav-item-right">
+            <span class="nav-item-badge">Đăng trực tiếp</span>
+            <span class="nav-item-btn">Vào đăng nhanh →</span>
+          </div>
+        </a>
+
+        <!-- 3. N8N & TERMINAL LOGS -->
+        <a href="/automation" class="nav-item item-automation">
+          <div class="nav-item-left">
+            <div class="nav-item-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 17 10 11 4 5"/>
+                <line x1="12" y1="19" x2="20" y2="19"/>
+              </svg>
+            </div>
+            <div class="nav-item-content">
+              <div class="nav-item-title">
+                n8n Terminal & Nhật Ký Tự Động Hóa
+              </div>
+              <div class="nav-item-desc">
+                Nhật ký xử lý thời gian thực, kích hoạt luồng tự động hóa và theo dõi tiến trình AI sinh nội dung.
+              </div>
+            </div>
+          </div>
+          <div class="nav-item-right">
+            <span class="nav-item-badge">Terminal Realtime</span>
+            <span class="nav-item-btn">Mở terminal →</span>
+          </div>
+        </a>
+
+        <!-- 4. TÀI LIỆU QUY TRÌNH -->
+        <a href="/quy-trinh-so-hoa-Asalar.html" target="_blank" class="nav-item item-docs">
+          <div class="nav-item-left">
+            <div class="nav-item-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+            </div>
+            <div class="nav-item-content">
+              <div class="nav-item-title">
+                Tài Liệu Quy Trình Số Hóa Ecolar
+              </div>
+              <div class="nav-item-desc">
+                Báo cáo kỹ thuật, sơ đồ luồng dữ liệu 4 tầng, chính sách bảo mật và điều khoản dịch vụ hệ thống.
+              </div>
+            </div>
+          </div>
+          <div class="nav-item-right">
+            <span class="nav-item-badge">Tài liệu kỹ thuật</span>
+            <span class="nav-item-btn">Xem tài liệu ↗</span>
+          </div>
+        </a>
+
+      </nav>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <span>© 2026 Ecolar Việt Nam — Lối sống xanh bền vững</span>
+    <div>
+      <a href="/privacy.html">Chính Sách Bảo Mật</a>
+      <a href="/terms.html">Điều Khoản Dịch Vụ</a>
+      <a href="https://ecolar.vn/" target="_blank">Ecolar.vn ↗</a>
+    </div>
+  </footer>
+
+  <script>
+    // Load config sheet URL and stats
+    async function initHub() {
+      try {
+        const r = await fetch('/api/sheet/config');
+        const d = await r.json();
+        if (d.success && d.sheet_url) {
+          const btn = document.getElementById('sheet-link-btn');
+          if (btn) btn.href = d.sheet_url;
+        }
+      } catch (_) {}
+
+      try {
+        const r = await fetch('/api/sheet/rows');
+        const d = await r.json();
+        if (d.success && Array.isArray(d.rows)) {
+          const totalEl = document.getElementById('stat-total-posts');
+          if (totalEl) totalEl.innerText = `${d.rows.length} bài viết`;
+          const readyCount = d.rows.filter(x => (x.status || '').toLowerCase() === 'publish' || (x.status || '').toLowerCase() === 'posted').length;
+          const readyEl = document.getElementById('stat-ready-posts');
+          if (readyEl) readyEl.innerText = `${readyCount} đã duyệt/đăng`;
+        }
+      } catch (_) {}
+
+      try {
+        const r = await fetch('/api/health/n8n');
+        const d = await r.json();
+        const el = document.getElementById('stat-n8n-status');
+        if (el) el.innerText = d.running ? 'n8n Online' : 'n8n Offline';
+      } catch (_) {}
+    }
+    initHub();
+  </script>
+</body>
+</html>

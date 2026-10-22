@@ -1,0 +1,3085 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chi Tiết Dòng Content — Content Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/dashboard.css">
+  <style>
+    body {
+      background-color: #f1f5f9;
+    }
+
+    /* Sleek Custom Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    .detail-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 1100px) {
+      .detail-layout { grid-template-columns: 1fr; }
+    }
+
+    /* Top Sticky Action Bar */
+    .top-action-bar {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 12px 18px;
+      margin-bottom: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+      position: sticky;
+      top: 10px;
+      z-index: 500;
+    }
+    /* Nút Lưu nổi góc dưới-phải, đứng một mình, chỉ xuất hiện khi có thay đổi chưa lưu */
+    #btn-detail-save {
+      display: none;
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 8000;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 24px;
+      font-size: 14px;
+      font-weight: 800;
+      font-family: inherit;
+      color: #ffffff;
+      background: #2563eb;
+      border: 1px solid #1d4ed8;
+      border-radius: 999px;
+      cursor: pointer;
+      animation: saveBlink 2.2s ease-in-out infinite;
+    }
+    #btn-detail-save:hover { background: #1d4ed8; }
+    #btn-detail-save.show-dirty { display: inline-flex; }
+    @keyframes saveBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.82; }
+    }
+    #dirty-indicator {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #b45309;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 999px;
+      padding: 3px 10px;
+    }
+    #dirty-indicator.show-dirty { display: inline-flex; }
+    #dirty-indicator .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #f59e0b;
+    }
+    .breadcrumb-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      color: #64748b;
+    }
+    .breadcrumb-row a {
+      color: #334155;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.15s;
+    }
+    .breadcrumb-row a:hover {
+      color: #15803d;
+    }
+    .row-title-inline {
+      font-size: 16.5px;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 3px;
+    }
+
+    /* Action Buttons in Header */
+    .btn-header-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 13px;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: 7px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      font-family: inherit;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+    .btn-action:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+      color: #0f172a;
+    }
+    /* 4 Distinct Solid Opaque Action Buttons (White Text & Icons) */
+    .btn-action-save {
+      background: #2563eb;
+      border-color: #1d4ed8;
+      color: #ffffff;
+      box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+    }
+    .btn-action-save:hover {
+      background: #1d4ed8;
+      border-color: #1e40af;
+      color: #ffffff;
+    }
+
+    .btn-action-ai {
+      background: #7c3aed;
+      border-color: #6d28d9;
+      color: #ffffff;
+      box-shadow: 0 1px 2px rgba(124, 58, 237, 0.2);
+    }
+    .btn-action-ai:hover {
+      background: #6d28d9;
+      border-color: #5b21b6;
+      color: #ffffff;
+    }
+
+    .btn-action-img {
+      background: #db2777;
+      border-color: #be185d;
+      color: #ffffff;
+      box-shadow: 0 1px 2px rgba(219, 39, 119, 0.2);
+    }
+    .btn-action-img:hover {
+      background: #be185d;
+      border-color: #9d174d;
+      color: #ffffff;
+    }
+
+    .btn-action-primary {
+      background: #15803d;
+      border-color: #166534;
+      color: #ffffff;
+      box-shadow: 0 1px 2px rgba(21, 128, 61, 0.2);
+    }
+    .btn-action-primary:hover {
+      background: #166534;
+      border-color: #14532d;
+      color: #ffffff;
+    }
+
+    /* Linear/Stripe-Style Clean Status Badges */
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 5px;
+      font-size: 11.5px;
+      font-weight: 600;
+      line-height: 1;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .status-waiting { background: #fef3c7; color: #92400e; }
+    .status-waiting .status-dot { background: #d97706; }
+    .status-publish { background: #dcfce7; color: #166534; }
+    .status-publish .status-dot { background: #16a34a; }
+    .status-posted  { background: #dbeafe; color: #1e40af; }
+    .status-posted .status-dot  { background: #2563eb; }
+    .status-active  { background: #f1f5f9; color: #334155; }
+
+    .badge-channel {
+      display: inline-flex;
+      align-items: center;
+      padding: 2.5px 8px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      letter-spacing: 0.2px;
+    }
+    .channel-page   { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+    .channel-group  { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+    .channel-tiktok { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
+
+    /* Left Sidebar Cards */
+    .sidebar-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .meta-card {
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 0;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+      overflow: hidden;
+    }
+    .meta-card-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #ffffff !important;
+      margin: 0;
+      padding: 12px 16px;
+      background: #2563eb; /* Solid Royal Blue */
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 9px;
+      letter-spacing: 0.2px;
+      box-sizing: border-box;
+      width: 100%;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    .meta-card-title.title-insight {
+      background: #7c3aed !important; /* Solid Violet */
+      color: #ffffff !important;
+    }
+    .meta-card-icon-box {
+      width: 24px;
+      height: 24px;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+    }
+    .meta-card-body {
+      padding: 16px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+
+    /* Collapsible Accordion for Card 2 */
+    .meta-card-accordion {
+      border: none;
+      margin: 0;
+      padding: 0;
+      background: transparent;
+    }
+    .meta-card-accordion summary {
+      list-style: none;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #ffffff !important;
+      transition: filter 0.15s ease;
+    }
+    .meta-card-accordion summary::-webkit-details-marker {
+      display: none;
+    }
+    .meta-card-accordion summary::marker {
+      display: none;
+    }
+    .meta-card-accordion summary:hover {
+      filter: brightness(1.06);
+    }
+    .accordion-chevron {
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+    }
+    details[open] .accordion-chevron {
+      transform: rotate(180deg);
+    }
+
+    /* Field Labels with Visual Dot Indicators */
+    .field-label {
+      font-size: 11.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #334155;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .label-dot {
+      width: 6.5px;
+      height: 6.5px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .dot-blue   { background: #2563eb; }
+    .dot-purple { background: #7c3aed; }
+    .dot-green  { background: #16a34a; }
+    .dot-amber  { background: #f59e0b; }
+    .dot-slate  { background: #64748b; }
+
+    .compact-field {
+      margin-bottom: 0;
+    }
+    .sidebar-panel .form-control {
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 11px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: #0f172a;
+      background: #ffffff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .sidebar-panel .form-control:hover {
+      border-color: #94a3b8;
+    }
+    .sidebar-panel .form-control:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+      outline: none;
+    }
+
+    /* Kênh Triển Khai Prominent Select */
+    .channel-select-prominent {
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      color: #0f172a !important;
+      background-color: #f8fafc !important;
+      border: 1.5px solid #94a3b8 !important;
+      border-radius: 8px !important;
+      padding: 8px 12px !important;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      transition: all 0.2s ease;
+    }
+    .channel-select-prominent:focus {
+      background-color: #ffffff !important;
+      border-color: #2563eb !important;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+    }
+
+    /* Trạng Thái Color-Coded Prominent Select */
+    .status-select-prominent {
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      border-radius: 8px !important;
+      padding: 8px 12px !important;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      transition: all 0.2s ease;
+    }
+    .status-select-waiting {
+      background-color: #fffbeb !important;
+      border: 2px solid #f59e0b !important;
+      color: #b45309 !important;
+    }
+    .status-select-waiting:focus {
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2) !important;
+    }
+    .status-select-publish {
+      background-color: #f0fdf4 !important;
+      border: 2px solid #16a34a !important;
+      color: #15803d !important;
+    }
+    .status-select-publish:focus {
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2) !important;
+    }
+    .status-select-posted {
+      background-color: #eff6ff !important;
+      border: 2px solid #2563eb !important;
+      color: #1d4ed8 !important;
+    }
+    .status-select-posted:focus {
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2) !important;
+    }
+    .status-select-ai {
+      background-color: #faf5ff !important;
+      border: 2px solid #7c3aed !important;
+      color: #6d28d9 !important;
+    }
+    .status-select-ai:focus {
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2) !important;
+    }
+
+    /* Drive Solid Blue Button */
+    .btn-drive-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 12px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+      background: #2563eb;
+      color: #ffffff !important;
+      border: 1.5px solid #1d4ed8;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+    }
+    .btn-drive-action svg {
+      stroke: #ffffff;
+    }
+    .btn-drive-action:hover {
+      background: #1d4ed8;
+      color: #ffffff !important;
+      border-color: #1e40af;
+      box-shadow: 0 2px 5px rgba(29, 78, 216, 0.3);
+      transform: translateY(-0.5px);
+    }
+
+    /* Right Main Content Workspace */
+    .content-stage {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* SLEEK ACTIVITY PROGRESS TRACKER CARD (Linear-style) */
+    .activity-tracker-card {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      position: relative;
+      overflow: hidden;
+    }
+    .tracker-progress-line {
+      height: 2.5px;
+      width: 100%;
+      background: #f1f5f9;
+      position: relative;
+      overflow: hidden;
+    }
+    .tracker-progress-line::after {
+      content: '';
+      position: absolute;
+      left: -35%;
+      width: 35%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, #15803d, #4ade80, transparent);
+      animation: indeterminateShimmer 1.6s infinite ease-in-out;
+    }
+    @keyframes indeterminateShimmer {
+      0% { left: -35%; }
+      100% { left: 100%; }
+    }
+    .tracker-main {
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .tracker-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tracker-icon-box {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #475569;
+    }
+    .tracker-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .tracker-desc {
+      font-size: 11.5px;
+      color: #64748b;
+      margin-top: 1px;
+    }
+    .tracker-status-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tracker-timer {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #64748b;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 2.5px 7px;
+      border-radius: 5px;
+    }
+    .tracker-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2.5px 8px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+    .btn-tracker-stop {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 13px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+      background: #dc2626;
+      border: 1px solid #b91c1c;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: inherit;
+      box-shadow: 0 1px 3px rgba(220, 38, 38, 0.3), 0 1px 2px rgba(220, 38, 38, 0.2);
+      letter-spacing: 0.2px;
+      animation: stopPulse 2.5s infinite;
+    }
+    @keyframes stopPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
+      50% { box-shadow: 0 0 0 5px rgba(220, 38, 38, 0); }
+    }
+    .btn-tracker-stop:hover {
+      background: #b91c1c;
+      border-color: #991b1b;
+      box-shadow: 0 3px 8px rgba(220, 38, 38, 0.4);
+      transform: translateY(-1px);
+    }
+    .btn-tracker-stop:active {
+      transform: translateY(0);
+    }
+
+    /* Read-only / Locked Form Styling while processing */
+    .form-locked-mode input,
+    .form-locked-mode select,
+    .form-locked-mode textarea {
+      background-color: #f8fafc !important;
+      color: #334155 !important;
+      cursor: not-allowed !important;
+      border-color: #e2e8f0 !important;
+    }
+    .form-locked-mode .btn-approve-toggle {
+      pointer-events: none !important;
+      opacity: 0.65 !important;
+      cursor: not-allowed !important;
+    }
+    .btn-header-locked {
+      opacity: 0.45 !important;
+      pointer-events: none !important;
+      cursor: not-allowed !important;
+      filter: grayscale(20%);
+    }
+    .tracker-stepper {
+      display: flex;
+      border-top: 1px solid #f1f5f9;
+      background: #fafbfc;
+      padding: 8px 18px;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .tracker-step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+    .step-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: #64748b;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9.5px;
+      font-weight: 700;
+    }
+    .tracker-step.step-running {
+      color: #0f172a;
+      font-weight: 600;
+    }
+    .tracker-step.step-running .step-dot {
+      background: #15803d;
+      color: #ffffff;
+    }
+    .tracker-step.step-done {
+      color: #15803d;
+      font-weight: 600;
+    }
+    .tracker-step.step-done .step-dot {
+      background: #dcfce7;
+      color: #15803d;
+    }
+    .step-divider {
+      color: #cbd5e1;
+      font-size: 11px;
+    }
+
+    /* Stage Workspace Top Bar */
+    .stage-header {
+      padding: 12px 18px;
+      border-bottom: 1px solid #cbd5e1;
+      background: #f8fafc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    /* Segmented Control Option Tabs */
+    .option-segmented-tabs {
+      display: inline-flex;
+      background: #e2e8f0;
+      padding: 3px;
+      border-radius: 8px;
+      gap: 3px;
+      border: 1px solid #cbd5e1;
+    }
+    .opt-seg-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+    .opt-seg-btn:hover {
+      color: #0f172a;
+      background: rgba(255, 255, 255, 0.5);
+    }
+    .opt-seg-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      font-weight: 700;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1), 0 1px 2px rgba(15, 23, 42, 0.06);
+    }
+    .opt-seg-btn.is-chosen {
+      color: #15803d;
+    }
+    .opt-badge-pill {
+      font-size: 10px;
+      line-height: 1;
+      padding: 2.5px 7px;
+      border-radius: 12px;
+      background: #15803d;
+      color: #ffffff;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      box-shadow: 0 1px 2px rgba(21, 128, 61, 0.25);
+    }
+
+    /* View Switcher: Single Tab vs 3-Column */
+    .view-mode-toggle {
+      display: inline-flex;
+      background: #e2e8f0;
+      border-radius: 8px;
+      padding: 3px;
+      gap: 3px;
+      border: 1px solid #cbd5e1;
+    }
+    .mode-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .mode-btn:hover {
+      color: #0f172a;
+      background: rgba(255, 255, 255, 0.5);
+    }
+    .mode-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      font-weight: 700;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1), 0 1px 2px rgba(15, 23, 42, 0.06);
+    }
+
+    /* Single Tab Editor */
+    .tab-editor-container {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .opt-heading-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .opt-heading-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .opt-indicator-bar {
+      width: 4px;
+      height: 16px;
+      background: #15803d;
+      border-radius: 2px;
+      display: inline-block;
+    }
+    .stage-textarea {
+      width: 100%;
+      min-height: 480px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 16px 18px;
+      font-family: inherit;
+      font-size: 13.5px;
+      line-height: 1.75;
+      color: #0f172a;
+      background: #ffffff;
+      resize: vertical;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .stage-textarea:focus {
+      outline: none;
+      border-color: #15803d;
+      box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.12);
+    }
+    .editor-footer-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 7px;
+      font-size: 12px;
+      color: #64748b;
+    }
+    .editor-stats-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      color: #334155;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 3.5px 10px;
+      border-radius: 6px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    /* Approval Toggle Button */
+    .btn-approve-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 13px;
+      border-radius: 7px;
+      font-size: 12.5px;
+      font-weight: 700;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      font-family: inherit;
+      line-height: 1.2;
+    }
+    .btn-approve-toggle.is-approved {
+      background: #15803d;
+      border: 1.5px solid #15803d;
+      color: #ffffff;
+      cursor: default;
+      box-shadow: 0 2px 5px rgba(21, 128, 61, 0.25);
+    }
+    .btn-approve-toggle.not-approved {
+      background: #ffffff;
+      border: 1.5px solid #15803d;
+      color: #15803d;
+      box-shadow: 0 1px 2px rgba(21, 128, 61, 0.08);
+    }
+    .btn-approve-toggle.not-approved:hover {
+      background: #15803d;
+      color: #ffffff;
+      border-color: #15803d;
+      box-shadow: 0 2px 5px rgba(21, 128, 61, 0.25);
+      transform: translateY(-1px);
+    }
+
+    /* 3-Column Comparison View */
+    .compare-grid {
+      display: none;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      padding: 16px;
+      background: #f8fafc;
+    }
+    @media (max-width: 1200px) {
+      .compare-grid { grid-template-columns: 1fr; }
+    }
+    .compare-col {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.15s;
+    }
+    .compare-col.is-chosen {
+      border-color: #86efac;
+      background: #fafffc;
+      box-shadow: 0 1px 6px rgba(21, 128, 61, 0.08);
+    }
+    .compare-col-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+    .compare-textarea {
+      width: 100%;
+      min-height: 400px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 12.5px;
+      line-height: 1.65;
+      resize: vertical;
+    }
+    .compare-textarea:focus {
+      outline: none;
+      border-color: #15803d;
+    }
+
+    /* Custom Modern Confirmation Modal */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.15s ease-out;
+    }
+    .modal-box {
+      background: #ffffff;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.18);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-header {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+      background: #ffffff;
+    }
+    .modal-icon-box {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: #f1f5f9;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+    }
+    .modal-close-btn {
+      background: transparent;
+      border: none;
+      font-size: 16px;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      line-height: 1;
+    }
+    .modal-close-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .modal-body {
+      padding: 20px;
+    }
+    .modal-info-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .modal-footer {
+      padding: 12px 20px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <div id="navbar-root"></div>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="content-area">
+
+    <!-- 1. LOADING STATE (HIỂN THỊ KHI ĐANG TẢI DỮ LIỆU) -->
+    <div id="detail-loading-state" style="text-align: center; padding: 120px 20px;">
+      <span class="spinner" style="width: 36px; height: 36px; border-width: 3.5px; color: var(--accent); margin-bottom: 16px;"></span>
+      <div style="font-size: 16px; font-weight: 800; color: var(--text);" id="loading-title">Đang tải dữ liệu bài viết...</div>
+      <div style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">Đang đồng bộ trực tiếp từ Google Sheets, vui lòng đợi trong giây lát</div>
+    </div>
+
+    <!-- 2. MAIN CONTENT (HIỂN THỊ KHI DỮ LIỆU ĐÃ TẢI XONG) -->
+    <div id="detail-main-content" style="display: none;">
+
+      <!-- TOP STICKY BAR: TITLE & GLOBAL ACTIONS -->
+      <div class="top-action-bar">
+        <div>
+          <div class="breadcrumb-row">
+            <a href="/content">Bảng Kế Hoạch</a>
+            <span>/</span>
+            <span id="detail-breadcrumb-row" style="font-weight: 600; color: #0f172a;">Dòng #...</span>
+          </div>
+          <div class="row-title-inline">
+            <span id="detail-page-title">Đang tải...</span>
+            <span id="detail-page-channel"></span>
+            <span id="detail-page-status"></span>
+            <span id="dirty-indicator" title="Form có thay đổi chưa lưu lên Sheet"><span class="dot"></span>Chưa lưu</span>
+          </div>
+        </div>
+
+        <div class="btn-header-group">
+          <button class="btn-action btn-action-ai" id="btn-detail-gen-ai" onclick="detailTriggerGenAI()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+            Tạo Content
+          </button>
+          <button class="btn-action btn-action-img" id="btn-detail-gen-img" onclick="openGenImageModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+            Tạo Ảnh AI
+          </button>
+          <a id="btn-header-live-post" href="#" target="_blank" rel="noopener noreferrer" class="btn-action" style="display: none; background: #15803d; border-color: #166534; color: #ffffff; text-decoration: none; align-items: center; gap: 6px; font-weight: 700;" title="Mở xem bài viết thực tế đã đăng (Facebook / TikTok)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            <span>Xem Bài Đã Đăng ↗</span>
+          </a>
+          <button class="btn-action btn-action-primary" id="btn-detail-buffer" onclick="openPublishBufferModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            Đăng Buffer
+          </button>
+        </div>
+      </div>
+
+      <!-- Nút Lưu nổi góc dưới-phải: chỉ hiện khi form có thay đổi chưa lưu -->
+      <button id="btn-detail-save" onclick="detailSaveChanges()" title="Lưu thay đổi lên Google Sheet">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        <span>Lưu thay đổi</span>
+      </button>
+
+      <!-- 2-COLUMN COMPACT LAYOUT -->
+      <div class="detail-layout">
+
+        <!-- LEFT: COMPACT SIDEBAR (320px) -->
+        <aside class="sidebar-panel">
+          
+          <!-- CARD 1: CẤU HÌNH & KÊNH -->
+          <div class="meta-card">
+            <div class="meta-card-title">
+              <div style="display: flex; align-items: center; gap: 9px;">
+                <span class="meta-card-icon-box">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10M7 12h10M7 17h10"/></svg>
+                </span>
+                <span>Thông tin bài viết</span>
+              </div>
+            </div>
+
+            <div class="meta-card-body">
+              <!-- KÊNH TRIỂN KHAI -->
+              <div class="compact-field">
+                <label class="field-label" style="color: #1e40af;">
+                  <span class="label-dot dot-blue"></span> Kênh Triển Khai
+                </label>
+                <select id="edit-channel" class="form-control channel-select-prominent">
+                  <option value="Facebook">Facebook Page</option>
+                  <option value="Facebook Group">Facebook Group</option>
+                  <option value="TikTok">TikTok</option>
+                </select>
+              </div>
+
+              <!-- TRẠNG THÁI -->
+              <div class="compact-field">
+                <label class="field-label" style="color: #92400e;">
+                  <span class="label-dot dot-amber" id="label-status-dot"></span> Trạng Thái
+                </label>
+                <select id="edit-status" class="form-control status-select-prominent" onchange="updateStatusSelectStyle()">
+                  <option value="draft">Bản nháp (draft)</option>
+                  <option value="waiting_review">Chờ duyệt (waiting_review)</option>
+                  <option value="publish">Sẵn sàng đăng (publish)</option>
+                  <option value="posted">Đã xuất bản (posted)</option>
+                  <option value="gen_options">Chờ AI gen (gen_options)</option>
+                  <option value="gen_images">Đang tạo ảnh AI (gen_images)</option>
+                </select>
+              </div>
+
+              <!-- LINK BÀI VIẾT THỰC TẾ (CỘT AS) -->
+              <div class="compact-field" id="field-live-post" style="display: none;">
+                <label class="field-label" style="color: #15803d; font-weight: 700;">
+                  <span class="label-dot dot-green"></span> Link Bài Viết Thực Tế
+                </label>
+                <div style="display: flex; gap: 6px;">
+                  <input type="text" id="edit-live-post-url" class="form-control" readonly style="font-size: 12px; color: #166534; background: #f0fdf4; border-color: #bbf7d0;">
+                  <a id="btn-open-live-post" href="#" target="_blank" rel="noopener noreferrer" class="btn-drive-action" style="background: #16a34a; border-color: #15803d; text-decoration: none;" title="Mở bài viết trực tiếp trên nền tảng">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    Xem bài ↗
+                  </a>
+                </div>
+              </div>
+
+              <!-- BUFFER POST ID (CỘT AR) -->
+              <div class="compact-field" id="field-buffer-id" style="display: none;">
+                <label class="field-label" style="color: #475569;">
+                  <span class="label-dot dot-slate"></span> Mã Bài Viết Buffer (Cột AR)
+                </label>
+                <div style="display: flex; gap: 6px;">
+                  <input type="text" id="edit-buffer-post-id" class="form-control" readonly style="font-size: 11px; font-family: 'JetBrains Mono', monospace; background: #f8fafc; font-weight: 600; color: #475569;">
+                  <a href="/buffer" class="btn-drive-action" style="background: #475569; border-color: #334155; text-decoration: none;" title="Xem bài trong tab Quản Lý Buffer">
+                    Buffer ↗
+                  </a>
+                </div>
+              </div>
+
+              <!-- CONTENT ID & PRESET ID (NẾU CÓ) -->
+              <div class="compact-field" id="field-content-id" style="display: none;">
+                <label class="field-label" style="color: #475569;">
+                  <span class="label-dot dot-slate"></span> Mã Bài Viết (Content ID)
+                </label>
+                <input type="text" id="edit-content-id" class="form-control" readonly style="font-size: 11px; font-family: 'JetBrains Mono', monospace; background: #f8fafc; font-weight: 700; color: #0f172a;">
+              </div>
+
+              <div class="compact-field" id="field-preset-id" style="display: none;">
+                <label class="field-label" style="color: #475569;">
+                  <span class="label-dot dot-slate"></span> Content Preset
+                </label>
+                <input type="text" id="edit-preset-id" class="form-control" readonly style="font-size: 11px; font-family: 'JetBrains Mono', monospace; background: #f8fafc; font-weight: 600; color: #475569;">
+              </div>
+
+              <!-- Ý TƯỞNG / HOOK -->
+              <div class="compact-field">
+                <label class="field-label">
+                  <span class="label-dot dot-slate"></span> Ý Tưởng / Hook Chính
+                </label>
+                <input type="text" id="edit-hook" class="form-control" placeholder="Nhập tiêu đề hoặc hook bài viết..." style="font-size: 12.5px;">
+              </div>
+
+              <!-- KHO MEDIA DRIVE (CỘT AB) -->
+              <div class="compact-field">
+                <label class="field-label">
+                  <span class="label-dot dot-green"></span> Kho Media Drive
+                </label>
+                <div style="display: flex; gap: 6px;">
+                  <input type="text" id="edit-drive-folder" class="form-control" placeholder="https://drive.google.com/..." style="font-size: 12px;">
+                  <a id="btn-open-drive-folder" href="#" target="_blank" class="btn-drive-action">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    Drive ↗
+                  </a>
+                </div>
+              </div>
+
+              <!-- MEDIA SẼ ĐĂNG (CỘT AC) -->
+              <div class="compact-field">
+                <label class="field-label">
+                  <span class="label-dot dot-amber"></span> Media Sẽ Đăng
+                </label>
+                <div style="display: flex; gap: 6px;">
+                  <input type="text" id="edit-media-to-post" class="form-control" placeholder="https://drive.google.com/..." style="font-size: 12px;">
+                  <a id="btn-open-media-post" href="#" target="_blank" class="btn-drive-action">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    Drive ↗
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 2: ĐỊNH HƯỚNG & INSIGHT (COLLAPSIBLE) -->
+          <div class="meta-card">
+            <details class="meta-card-accordion" id="accordion-orientation" open>
+              <summary class="meta-card-title title-insight">
+                <div style="display: flex; align-items: center; gap: 9px;">
+                  <span class="meta-card-icon-box">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+                  </span>
+                  <span>Định hướng & Insight khách hàng</span>
+                </div>
+                <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </summary>
+              <div class="meta-card-body">
+                <div class="compact-field">
+                  <label class="field-label" style="color: #6b21a8;">
+                    <span class="label-dot dot-purple"></span> Mục Đích Chính
+                  </label>
+                  <input type="text" id="edit-goal" class="form-control" placeholder="Mục đích..." style="font-size: 12.5px;">
+                </div>
+                <div class="compact-field">
+                  <label class="field-label" style="color: #6b21a8;">
+                    <span class="label-dot dot-purple"></span> Thông Tin Thương Hiệu / USP
+                  </label>
+                  <textarea id="edit-usp" class="form-control" placeholder="USP..." rows="3" style="font-size: 12.5px;"></textarea>
+                </div>
+                <div class="compact-field">
+                  <label class="field-label" style="color: #6b21a8;">
+                    <span class="label-dot dot-purple"></span> Chân Dung & Insight Khách Hàng
+                  </label>
+                  <textarea id="edit-insight" class="form-control" placeholder="Insight..." rows="4" style="font-size: 12.5px;"></textarea>
+                </div>
+              </div>
+            </details>
+          </div>
+
+        </aside>
+
+        <!-- RIGHT: CONTENT STAGE WORKSPACE -->
+        <section class="content-stage">
+
+          <!-- LIVE AI GENERATION PROGRESS TRACKER BANNER -->
+          <div id="ai-gen-progress-card" class="activity-tracker-card" style="display: none;">
+            <div class="tracker-progress-line"></div>
+            <div class="tracker-main">
+              <div class="tracker-info">
+                <div class="tracker-icon-box">
+                  <span class="spinner-mini" style="width: 14px; height: 14px; border-width: 2px;"></span>
+                </div>
+                <div>
+                  <div class="tracker-title">Đang tạo 3 Options bằng AI (Dòng #<span id="ai-progress-row">...</span>)</div>
+                  <div class="tracker-desc">Hệ thống đang phân tích định hướng và sinh các phương án nội dung · <em>Nếu là batch, dừng sẽ dừng tất cả các bài</em></div>
+                </div>
+              </div>
+              <div class="tracker-status-group">
+                <span class="tracker-timer" id="ai-progress-timer">00:00s</span>
+                <span class="tracker-badge" id="ai-progress-badge">Đang xử lý</span>
+                <button class="btn-tracker-stop" onclick="stopAIGenerationTracker()" title="⚠️ Dừng toàn bộ luồng n8n (kể cả các bài viết khác trong cùng batch)">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                  <span>Dừng luồng</span>
+                </button>
+              </div>
+            </div>
+            <div class="tracker-stepper">
+              <div class="tracker-step step-done" id="step-save">
+                <span class="step-dot">✓</span>
+                <span>1. Chuẩn bị định hướng</span>
+              </div>
+              <span class="step-divider">→</span>
+              <div class="tracker-step step-running" id="step-n8n">
+                <span class="step-dot"><span class="spinner-mini" style="width: 8px; height: 8px; border-width: 1.5px;"></span></span>
+                <span id="step-n8n-text">2. Viết 3 Options</span>
+              </div>
+              <span class="step-divider">→</span>
+              <div class="tracker-step" id="step-sync">
+                <span class="step-dot">3</span>
+                <span id="step-sync-text">3. Tự động đồng bộ</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- LIVE BUFFER PUBLISHING PROGRESS TRACKER BANNER -->
+          <div id="buffer-publish-progress-card" class="activity-tracker-card" style="display: none;">
+            <div class="tracker-progress-line"></div>
+            <div class="tracker-main">
+              <div class="tracker-info">
+                <div class="tracker-icon-box">
+                  <span class="spinner-mini" style="width: 14px; height: 14px; border-width: 2px;"></span>
+                </div>
+                <div>
+                  <div class="tracker-title">Đang xuất bản bài viết lên Buffer (Dòng #<span id="publish-progress-row">...</span>)</div>
+                  <div class="tracker-desc">Hệ thống đang xử lý media Drive, gắn Watermark và đưa vào hàng chờ Buffer · <em>Nếu là batch, dừng sẽ dừng tất cả các bài</em></div>
+                </div>
+              </div>
+              <div class="tracker-status-group">
+                <span class="tracker-timer" id="publish-progress-timer">00:00s</span>
+                <span class="tracker-badge" id="publish-progress-badge">Đang đăng bài</span>
+                <button class="btn-tracker-stop" onclick="stopPublishProgressTracker()" title="⚠️ Dừng toàn bộ luồng n8n (kể cả các bài viết khác trong cùng batch)">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                  <span>Dừng luồng</span>
+                </button>
+              </div>
+            </div>
+            <div class="tracker-stepper">
+              <div class="tracker-step step-done" id="step-pub-save">
+                <span class="step-dot">✓</span>
+                <span>1. Đã chốt Option đã duyệt</span>
+              </div>
+              <span class="step-divider">→</span>
+              <div class="tracker-step step-running" id="step-pub-n8n">
+                <span class="step-dot"><span class="spinner-mini" style="width: 8px; height: 8px; border-width: 1.5px;"></span></span>
+                <span id="step-pub-n8n-text">2. Xử lý media & đẩy Buffer</span>
+              </div>
+              <span class="step-divider">→</span>
+              <div class="tracker-step" id="step-pub-sync">
+                <span class="step-dot">3</span>
+                <span id="step-pub-sync-text">3. Xác nhận hoàn tất</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- LIVE AI IMAGE GENERATION PROGRESS TRACKER BANNER -->
+          <div id="ai-img-progress-card" class="activity-tracker-card" style="display: none;">
+            <div class="tracker-progress-line"></div>
+            <div class="tracker-main">
+              <div class="tracker-info">
+                <div class="tracker-icon-box">
+                  <span class="spinner-mini" style="width: 14px; height: 14px; border-width: 2px;"></span>
+                </div>
+                <div>
+                  <div class="tracker-title">Đang tạo ảnh minh họa bằng AI (Dòng #<span id="img-progress-row">...</span>)</div>
+                  <div class="tracker-desc">Hệ thống đang sinh ảnh AI, gắn logo thương hiệu và lưu vào Google Drive · <em>Nếu là batch, dừng sẽ dừng tất cả các bài</em></div>
+                </div>
+              </div>
+              <div class="tracker-status-group">
+                <span class="tracker-timer" id="img-progress-timer">00:00s</span>
+                <span class="tracker-badge" id="img-progress-badge">Đang tạo ảnh</span>
+                <button class="btn-tracker-stop" onclick="stopImageGenerationTracker()" title="⚠️ Dừng toàn bộ luồng n8n (kể cả các bài viết khác trong cùng batch)">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                  <span>Dừng luồng</span>
+                </button>
+              </div>
+            </div>
+            <div class="tracker-stepper">
+              <div class="tracker-step step-done" id="step-img-save">
+                <span class="step-dot">✓</span>
+                <span>1. Chuẩn bị thông số ảnh</span>
+              </div>
+              <span class="step-divider">→</span>
+              <div class="tracker-step step-running" id="step-img-n8n">
+                <span class="step-dot"><span class="spinner-mini" style="width: 8px; height: 8px; border-width: 1.5px;"></span></span>
+                <span id="step-img-n8n-text">2. Sinh ảnh & ghép layout</span>
+              </div>
+              <span class="step-divider">→</span>
+              <div class="tracker-step" id="step-img-sync">
+                <span class="step-dot">3</span>
+                <span id="step-img-sync-text">3. Tải lên Drive & cập nhật</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- NOTICE: KHÓA MÀN HÌNH TRÁNH THAO TÁC LỖI KHI ĐANG CHẠY -->
+          <div id="detail-locked-notice" style="display: none; margin-bottom: 16px; padding: 10px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; font-size: 12px; color: #92400e; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 15px; flex-shrink: 0;">🔒</span>
+              <div>
+                <strong>Chế độ chỉ đọc khi đang chạy:</strong> Các ô nhập liệu và nút chức năng đã tạm khóa. Bạn vẫn có thể xem và sao chép nội dung.
+                <br><span style="color: #b45309; font-size: 11px;">⚠️ Nếu đang chạy batch nhiều bài — bấm "Dừng luồng" sẽ dừng TẤT CẢ các bài đang chạy trong batch, không chỉ bài này.</span>
+              </div>
+            </div>
+            <div style="font-size: 11px; font-weight: 700; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; padding: 3px 8px; border-radius: 5px; flex-shrink: 0; white-space: nowrap;">
+              Nhấn nút "Dừng luồng" màu đỏ phía trên để can thiệp
+            </div>
+          </div>
+
+
+          <!-- STAGE TOP BAR -->
+          <div class="stage-header">
+            <!-- OPTION TABS -->
+            <div class="option-segmented-tabs">
+              <button class="opt-seg-btn active" id="tab-btn-1" onclick="switchOptionTab(1)">
+                <span>Option 1</span>
+                <span id="tab-badge-1" class="opt-badge-pill" style="display: none;">Đã duyệt</span>
+              </button>
+              <button class="opt-seg-btn" id="tab-btn-2" onclick="switchOptionTab(2)">
+                <span>Option 2</span>
+                <span id="tab-badge-2" class="opt-badge-pill" style="display: none;">Đã duyệt</span>
+              </button>
+              <button class="opt-seg-btn" id="tab-btn-3" onclick="switchOptionTab(3)">
+                <span>Option 3</span>
+                <span id="tab-badge-3" class="opt-badge-pill" style="display: none;">Đã duyệt</span>
+              </button>
+            </div>
+
+            <!-- VIEW SWITCHER (SINGLE TAB vs 3-COLUMNS) -->
+            <div class="view-mode-toggle">
+              <button class="mode-btn active" id="mode-btn-single" onclick="setEditorMode('single')">Soạn Thảo</button>
+              <button class="mode-btn" id="mode-btn-compare" onclick="setEditorMode('compare')">So Sánh 3 Cột</button>
+            </div>
+          </div>
+
+          <!-- DRAFT STATUS NOTICE BANNER -->
+          <div id="draft-notice-banner" style="display: none; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 16px 20px; margin: 16px 18px 0; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 36px; height: 36px; border-radius: 8px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">
+                💡
+              </div>
+              <div>
+                <div style="font-size: 13.5px; font-weight: 700; color: #0f172a;">Bài viết đang ở trạng thái Bản Nháp (Draft)</div>
+                <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                  Chưa có nội dung các Option. Nhấn <b>"Tạo Content"</b> ở góc trên để AI tự động sinh 3 phương án nội dung theo Preset!
+                </div>
+              </div>
+            </div>
+            <button class="btn-action btn-action-ai" onclick="detailTriggerGenAI()" style="padding: 7px 14px; font-weight: 700;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+              Tạo Content Bằng AI
+            </button>
+          </div>
+
+          <!-- MODE 1: SINGLE TAB VIEW (RỘNG RÃI, THOÁNG ĐÃNG) -->
+          <div id="view-single-editor" class="tab-editor-container">
+            <div class="opt-heading-row">
+              <div class="opt-heading-left">
+                <span class="opt-indicator-bar"></span>
+                <strong id="active-opt-heading" style="font-size: 14.5px; color: #0f172a; font-weight: 800; letter-spacing: -0.2px;">Option 1</strong>
+              </div>
+              <button class="btn-approve-toggle not-approved" id="btn-approve-current" onclick="approveActiveOption()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Chọn Option 1 để đăng</span>
+              </button>
+            </div>
+
+            <textarea id="active-opt-textarea" class="stage-textarea" oninput="handleActiveOptInput()" placeholder="Nội dung bài viết..."></textarea>
+
+            <div class="editor-footer-bar">
+              <div class="editor-stats-pill">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span id="active-opt-stats">0 từ · 0 ký tự</span>
+              </div>
+              <span style="font-size: 11.5px; color: #64748b; font-weight: 500;">Nhấn "Lưu Thay Đổi" để đồng bộ lên Google Sheet</span>
+            </div>
+          </div>
+
+          <!-- MODE 2: 3-COLUMN COMPARISON VIEW -->
+          <div id="view-compare-editor" class="compare-grid">
+            <!-- COL 1 -->
+            <div class="compare-col" id="cmp-col-1">
+              <div class="compare-col-header">
+                <span style="color: #0284c7;">Option 1</span>
+                <span id="cmp-badge-1"></span>
+              </div>
+              <textarea id="cmp-textarea-1" class="compare-textarea" oninput="syncFromCompare(1)"></textarea>
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                <span id="cmp-stats-1">0 từ</span>
+                <button class="btn btn-sm btn-success" onclick="chooseOption(1)">Duyệt Opt 1</button>
+              </div>
+            </div>
+
+            <!-- COL 2 -->
+            <div class="compare-col" id="cmp-col-2">
+              <div class="compare-col-header">
+                <span style="color: #059669;">Option 2</span>
+                <span id="cmp-badge-2"></span>
+              </div>
+              <textarea id="cmp-textarea-2" class="compare-textarea" oninput="syncFromCompare(2)"></textarea>
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                <span id="cmp-stats-2">0 từ</span>
+                <button class="btn btn-sm btn-success" onclick="chooseOption(2)">Duyệt Opt 2</button>
+              </div>
+            </div>
+
+            <!-- COL 3 -->
+            <div class="compare-col" id="cmp-col-3">
+              <div class="compare-col-header">
+                <span style="color: #d97706;">Option 3</span>
+                <span id="cmp-badge-3"></span>
+              </div>
+              <textarea id="cmp-textarea-3" class="compare-textarea" oninput="syncFromCompare(3)"></textarea>
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                <span id="cmp-stats-3">0 từ</span>
+                <button class="btn btn-sm btn-success" onclick="chooseOption(3)">Duyệt Opt 3</button>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <script src="/public/js/common.js"></script>
+  <script>
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function isExecutionRelevantError(ex, triggeredAt, ignoreExecId) {
+      if (!ex || ex.status !== 'error') return false;
+      const exStart = ex.startedAt ? new Date(ex.startedAt).getTime() : 0;
+      const exStop = ex.stoppedAt ? new Date(ex.stoppedAt).getTime() : exStart;
+
+      // Nếu vừa mới bấm nút (chạy luồng mới)
+      if (triggeredAt) {
+        if (ignoreExecId && String(ex.id) === String(ignoreExecId)) return false;
+        if (exStart < triggeredAt - 10000) return false;
+        return true;
+      }
+
+      // Nếu F5 tải lại trang khi dòng vẫn dở dang, kiểm tra lỗi trong 30 phút qua
+      const now = Date.now();
+      return (now - exStop < 30 * 60 * 1000);
+    }
+
+    function handleTrackerError(badgeId, stepN8nId, stepSyncId, ex, defaultMsg) {
+      const badge = document.getElementById(badgeId);
+      if (badge) {
+        badge.className = 'tracker-badge';
+        badge.style.background = '#fee2e2';
+        badge.style.color = '#b91c1c';
+        badge.style.borderColor = '#fca5a5';
+        badge.innerText = 'Đã dừng do lỗi';
+      }
+
+      const stepN8n = document.getElementById(stepN8nId);
+      if (stepN8n) {
+        stepN8n.className = 'tracker-step';
+        const desc = ex.error?.description || ex.error?.message || defaultMsg;
+        const nodeStr = ex.error?.node ? `[${ex.error.node}] ` : '';
+        stepN8n.innerHTML = `<span class="step-dot" style="background:#fee2e2;color:#dc2626;font-weight:700;">!</span> <span style="color:#b91c1c;font-weight:600;">Lỗi: ${nodeStr}${escapeHtml(desc)}</span>`;
+      }
+
+      const stepSync = document.getElementById(stepSyncId);
+      if (stepSync) {
+        stepSync.className = 'tracker-step';
+        stepSync.innerHTML = '<span class="step-dot" style="background:#f1f5f9;color:#64748b;">-</span> <span style="color:#64748b;">Bấm nút <b>"Dừng luồng"</b> bên trên để khôi phục trạng thái</span>';
+      }
+
+      setDetailReadOnlyMode(false);
+      showToast(`❌ ${ex.error?.node ? '[' + ex.error.node + '] ' : ''}${ex.error?.message || defaultMsg}`, 'error');
+    }
+
+    renderNavbar('content');
+
+    const rawParam = window.location.pathname.split('/').filter(Boolean).pop();
+    let rowNum = isNaN(Number(rawParam)) ? 0 : parseInt(rawParam);
+    const rowIdentifier = rawParam;
+    let currentDetailRow = null;
+    let activeOptionNum = 1;
+    let editorMode = 'single'; // 'single' | 'compare'
+
+    // Temporary storage for options
+    let optionsData = { 1: '', 2: '', 3: '' };
+
+    async function loadRowDetail() {
+      const loadingTitle = document.getElementById('loading-title');
+      if (loadingTitle) loadingTitle.innerText = `Đang tải dữ liệu bài viết...`;
+
+      try {
+        const res = await fetch(`/api/sheet/row/${encodeURIComponent(rowIdentifier)}?t=${Date.now()}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Không tìm thấy dòng này');
+
+        currentDetailRow = data.row;
+        rowNum = currentDetailRow.row_number;
+        populateDetailForm(currentDetailRow);
+
+        // Hide loading, show content with smooth transition
+        document.getElementById('detail-loading-state').style.display = 'none';
+        document.getElementById('detail-main-content').style.display = 'block';
+
+        // 👉 KIỂM TRA N8N STATUS: Chỉ kích hoạt Live Tracker nếu n8n THỰC SỰ ĐANG CHẠY trên dòng này
+        const st = (currentDetailRow.status || '').toLowerCase().trim();
+        try {
+          const statusRes = await fetch(`/api/n8n/status?t=${Date.now()}`);
+          const statusData = await statusRes.json();
+          if (statusData && statusData.success && statusData.is_running) {
+            const act = statusData.active_action;
+            const isTargetRow = !statusData.target_row || String(statusData.target_row) === String(rowNum);
+            
+            if (isTargetRow) {
+              const execStartedAt = statusData.execution?.startedAt 
+                ? new Date(statusData.execution.startedAt).getTime() 
+                : Date.now();
+
+              if (act === 'publish' && st === 'publish') {
+                console.log(`🔄 [RESUME] n8n đang chạy publish Dòng #${rowNum} -> Bật Publish Tracker`);
+                startPublishProgressTracker(execStartedAt);
+              } else if (act === 'content' && (st === 'gen_options' || st === 'draft')) {
+                console.log(`🔄 [RESUME] n8n đang chạy content Dòng #${rowNum} -> Bật AI Content Tracker`);
+                startAIGenerationTracker(execStartedAt);
+              } else if (act === 'images' && (st === 'gen_images' || st === 'waiting_review')) {
+                console.log(`🔄 [RESUME] n8n đang chạy images Dòng #${rowNum} -> Bật Image Gen Tracker`);
+                startImageGenerationTracker(execStartedAt);
+              }
+            }
+          }
+        } catch (statusErr) {
+          console.warn('Lỗi kiểm tra n8n status khi tải chi tiết:', statusErr);
+        }
+      } catch (err) {
+        document.getElementById('detail-loading-state').innerHTML = `
+          <div style="font-size: 16px; font-weight: 800; color: var(--danger); margin-bottom: 8px;">❌ Lỗi: ${escapeHtml(err.message)}</div>
+          <button class="btn btn-sm btn-primary" onclick="location.reload()">⟳ Thử lại</button>
+        `;
+        showToast('❌ ' + err.message);
+      }
+    }
+
+    function updateStatusSelectStyle() {
+      const select = document.getElementById('edit-status');
+      const dot = document.getElementById('label-status-dot');
+      if (!select) return;
+
+      const val = (select.value || '').toLowerCase().trim();
+      select.className = 'form-control status-select-prominent';
+
+      // Chặn chuyển sang publish hoặc gen_images nếu bài chưa có content.
+      // Guard chống đệ quy vô hạn: khi trạng thái trên Sheet vốn đã là publish/gen_images
+      // (vd mở chi tiết dòng Sẵn sàng đăng nhưng 3 Option còn trống), select.value === prev
+      // nên KHÔNG reset/không gọi lại — chỉ thoát để khỏi crash Maximum call stack.
+      if ((val === 'publish' || val === 'gen_images') && typeof detailHasContent === 'function' && !detailHasContent()) {
+        const prev = (currentDetailRow?.status || 'waiting_review');
+        if (select.value !== prev) {
+          select.value = prev;
+          updateStatusSelectStyle();
+          if (typeof showSimpleAlertModal === 'function') {
+            showSimpleAlertModal({
+              title: val === 'publish' ? 'Chưa có nội dung đăng bài' : 'Chưa có nội dung để tạo ảnh',
+              desc: `Bài viết <strong>Dòng #${rowNum}</strong> hiện chưa có nội dung (content). Vui lòng tạo nội dung trước khi chuyển sang trạng thái <strong>"${val === 'publish' ? 'Sẵn sàng đăng' : 'Chờ tạo ảnh'}"</strong>!`,
+              actionText: 'Tạo Content Bằng AI',
+              onAction: () => openConfirmModal()
+            });
+          }
+        }
+        return;
+      }
+
+      if (val === 'draft') {
+        select.classList.add('status-select-waiting');
+        if (dot) dot.style.background = '#94a3b8';
+      } else if (val === 'publish') {
+        select.classList.add('status-select-publish');
+        if (dot) dot.style.background = '#16a34a';
+      } else if (val === 'posted') {
+        select.classList.add('status-select-posted');
+        if (dot) dot.style.background = '#2563eb';
+      } else if (val.includes('gen_')) {
+        select.classList.add('status-select-ai');
+        if (dot) dot.style.background = '#7c3aed';
+      } else { // waiting_review or default
+        select.classList.add('status-select-waiting');
+        if (dot) dot.style.background = '#f59e0b';
+      }
+
+      refreshSaveButton();
+    }
+
+    function populateDetailForm(row) {
+      document.getElementById('detail-breadcrumb-row').innerText = row.content_id 
+        ? `Dòng #${row.row_number} (${row.content_id})` 
+        : `Dòng #${row.row_number}`;
+
+      // Fix title display: Không bị lặp dòng (Dòng #5)
+      const displayTitle = (row.hook && row.hook.trim() !== 'Chưa có') 
+        ? row.hook 
+        : (row.channel ? `Kênh ${row.channel}` : 'Bài viết mới');
+      const idPrefix = row.content_id ? `[${row.content_id}] ` : '';
+      document.getElementById('detail-page-title').innerText = `${idPrefix}Dòng #${row.row_number} — ${displayTitle}`;
+
+      const ch = (row.channel || '').toLowerCase();
+      let chBadge = '<span class="badge-channel channel-page">FB Page</span>';
+      if (ch.includes('group')) chBadge = '<span class="badge-channel channel-group">FB Group</span>';
+      if (ch.includes('tiktok')) chBadge = '<span class="badge-channel channel-tiktok">TikTok</span>';
+      document.getElementById('detail-page-channel').innerHTML = chBadge;
+
+      const s = (row.status || '').toLowerCase();
+      let stBadge = '<span class="badge-status status-waiting"><span class="status-dot"></span>Chờ duyệt</span>';
+      if (s === 'draft' || s.includes('draft')) stBadge = '<span class="badge-status" style="background:#f1f5f9;color:#475569;border-color:#cbd5e1;"><span class="status-dot" style="background:#94a3b8;"></span>Bản nháp</span>';
+      else if (s.includes('publish')) stBadge = '<span class="badge-status status-publish"><span class="status-dot"></span>Sẵn sàng đăng</span>';
+      else if (s.includes('posted')) stBadge = '<span class="badge-status status-posted"><span class="status-dot"></span>Đã xuất bản</span>';
+      else if (s.includes('gen_options')) stBadge = '<span class="badge-status status-active"><span class="spinner-mini" style="width:7px;height:7px;border-width:1.5px;"></span>Đang tạo content</span>';
+      else if (s.includes('gen_images')) stBadge = '<span class="badge-status status-active"><span class="spinner-mini" style="width:7px;height:7px;border-width:1.5px;"></span>Đang tạo ảnh</span>';
+      document.getElementById('detail-page-status').innerHTML = stBadge;
+
+      // Populate content_id & preset_id fields
+      if (row.content_id) {
+        const f = document.getElementById('field-content-id');
+        if (f) f.style.display = 'block';
+        const inp = document.getElementById('edit-content-id');
+        if (inp) inp.value = row.content_id;
+      }
+      if (row.preset_id) {
+        const f = document.getElementById('field-preset-id');
+        if (f) f.style.display = 'block';
+        const inp = document.getElementById('edit-preset-id');
+        if (inp) inp.value = row.preset_id;
+      }
+
+      // Draft Notice Banner
+      const isDraftEmpty = (s === 'draft' || s.includes('draft')) && !row.option_1 && !row.option_2 && !row.option_3;
+      const draftBanner = document.getElementById('draft-notice-banner');
+      if (draftBanner) {
+        draftBanner.style.display = isDraftEmpty ? 'flex' : 'none';
+      }
+
+      document.getElementById('edit-channel').value = row.channel || 'Facebook';
+      document.getElementById('edit-status').value = row.status || 'waiting_review';
+      updateStatusSelectStyle();
+      document.getElementById('edit-hook').value = (row.hook && row.hook.trim() !== 'Chưa có') ? row.hook : '';
+      document.getElementById('edit-goal').value = row.goal || '';
+      document.getElementById('edit-usp').value = row.usp || '';
+      document.getElementById('edit-insight').value = row.insight || '';
+
+      // Kho Media Drive (Cột AB)
+      const driveFolder = row.drive_folder || '';
+      document.getElementById('edit-drive-folder').value = driveFolder;
+      const btnOpenDrive = document.getElementById('btn-open-drive-folder');
+      if (driveFolder) {
+        btnOpenDrive.href = driveFolder;
+        btnOpenDrive.style.display = 'inline-flex';
+      } else {
+        btnOpenDrive.style.display = 'none';
+      }
+
+      // Media Sẽ Đăng (Cột AC)
+      const mediaToPost = row.media_to_post || driveFolder || '';
+      document.getElementById('edit-media-to-post').value = mediaToPost;
+      const btnOpenMedia = document.getElementById('btn-open-media-post');
+      if (mediaToPost) {
+        btnOpenMedia.href = mediaToPost;
+        btnOpenMedia.style.display = 'inline-flex';
+      } else {
+        btnOpenMedia.style.display = 'none';
+      }
+
+      // Link bài viết thực tế (Cột AS)
+      const liveUrl = (row.live_post_url && row.live_post_url.trim()) ? row.live_post_url.trim() : '';
+      const fieldLivePost = document.getElementById('field-live-post');
+      const inputLivePost = document.getElementById('edit-live-post-url');
+      const btnOpenLive = document.getElementById('btn-open-live-post');
+      const headerLiveBtn = document.getElementById('btn-header-live-post');
+      
+      if (liveUrl) {
+        if (fieldLivePost) fieldLivePost.style.display = 'block';
+        if (inputLivePost) inputLivePost.value = liveUrl;
+        if (btnOpenLive) {
+          btnOpenLive.href = liveUrl;
+          btnOpenLive.style.display = 'inline-flex';
+        }
+        if (headerLiveBtn) {
+          headerLiveBtn.href = liveUrl;
+          headerLiveBtn.style.display = 'inline-flex';
+        }
+      } else {
+        if (fieldLivePost) fieldLivePost.style.display = 'none';
+        if (headerLiveBtn) headerLiveBtn.style.display = 'none';
+      }
+
+      // Buffer Post ID (Cột AR)
+      const bufferId = (row.buffer_post_id && row.buffer_post_id.trim()) ? row.buffer_post_id.trim() : '';
+      const fieldBufferId = document.getElementById('field-buffer-id');
+      const inputBufferId = document.getElementById('edit-buffer-post-id');
+      if (bufferId) {
+        if (fieldBufferId) fieldBufferId.style.display = 'block';
+        if (inputBufferId) inputBufferId.value = bufferId;
+      } else {
+        if (fieldBufferId) fieldBufferId.style.display = 'none';
+      }
+
+      optionsData[1] = row.option_1 || '';
+      optionsData[2] = row.option_2 || '';
+      optionsData[3] = row.option_3 || '';
+
+      // Populate compare fields
+      document.getElementById('cmp-textarea-1').value = optionsData[1];
+      document.getElementById('cmp-textarea-2').value = optionsData[2];
+      document.getElementById('cmp-textarea-3').value = optionsData[3];
+
+      updateCompareStats(1);
+      updateCompareStats(2);
+      updateCompareStats(3);
+
+      // Render active option - Mặc định là Option 1 nếu chưa chọn
+      if (!row.approved_option || !String(row.approved_option).trim()) {
+        row.approved_option = 'Option 1';
+      }
+      if (currentDetailRow && (!currentDetailRow.approved_option || !String(currentDetailRow.approved_option).trim())) {
+        currentDetailRow.approved_option = 'Option 1';
+      }
+      switchOptionTab(activeOptionNum);
+      updateApprovedBadges(row.approved_option);
+      snapshotDetailForm(); // Chụp trạng thái gốc để so sánh thay đổi
+    }
+
+    function switchOptionTab(num) {
+      activeOptionNum = num;
+
+      // Update tab buttons
+      [1, 2, 3].forEach(i => {
+        const btn = document.getElementById(`tab-btn-${i}`);
+        btn.classList.toggle('active', i === num);
+      });
+
+      // Update Single View
+      document.getElementById('active-opt-heading').innerText = `Option ${num}`;
+      document.getElementById('active-opt-textarea').value = optionsData[num] || '';
+      updateSingleStats();
+      updateApproveButtonText();
+    }
+
+    function handleActiveOptInput() {
+      optionsData[activeOptionNum] = document.getElementById('active-opt-textarea').value;
+      document.getElementById(`cmp-textarea-${activeOptionNum}`).value = optionsData[activeOptionNum];
+      updateSingleStats();
+      updateCompareStats(activeOptionNum);
+    }
+
+    function syncFromCompare(num) {
+      optionsData[num] = document.getElementById(`cmp-textarea-${num}`).value;
+      if (activeOptionNum === num) {
+        document.getElementById('active-opt-textarea').value = optionsData[num];
+        updateSingleStats();
+      }
+      updateCompareStats(num);
+    }
+
+    function updateSingleStats() {
+      const text = (optionsData[activeOptionNum] || '').trim();
+      const words = text ? text.split(/\s+/).length : 0;
+      const chars = text.length;
+      document.getElementById('active-opt-stats').innerText = `${words} từ · ${chars} ký tự · ~${Math.ceil(words / 200)} phút đọc`;
+    }
+
+    function updateCompareStats(num) {
+      const text = (optionsData[num] || '').trim();
+      const words = text ? text.split(/\s+/).length : 0;
+      document.getElementById(`cmp-stats-${num}`).innerText = `${words} từ`;
+    }
+
+    function setEditorMode(mode) {
+      editorMode = mode;
+      document.getElementById('mode-btn-single').classList.toggle('active', mode === 'single');
+      document.getElementById('mode-btn-compare').classList.toggle('active', mode === 'compare');
+
+      document.getElementById('view-single-editor').style.display = (mode === 'single') ? 'flex' : 'none';
+      document.getElementById('view-compare-editor').style.display = (mode === 'compare') ? 'grid' : 'none';
+    }
+
+    function updateApprovedBadges(chosen) {
+      [1, 2, 3].forEach(i => {
+        const isChosen = (chosen === `Option ${i}`);
+        
+        // Tab button
+        const tabBtn = document.getElementById(`tab-btn-${i}`);
+        tabBtn.classList.toggle('is-chosen', isChosen);
+        const tabBadge = document.getElementById(`tab-badge-${i}`);
+        tabBadge.style.display = isChosen ? 'inline-flex' : 'none';
+        tabBadge.className = 'opt-badge-pill';
+        tabBadge.innerHTML = '✓ Đã duyệt';
+
+        // Compare column
+        const cmpCol = document.getElementById(`cmp-col-${i}`);
+        cmpCol.classList.toggle('is-chosen', isChosen);
+        const cmpBadge = document.getElementById(`cmp-badge-${i}`);
+        cmpBadge.innerHTML = isChosen ? '<span class="badge-status status-publish"><span class="status-dot"></span> Đã duyệt</span>' : '';
+      });
+
+      updateApproveButtonText();
+    }
+
+    function updateApproveButtonText() {
+      const isChosen = (currentDetailRow?.approved_option === `Option ${activeOptionNum}`);
+      const btn = document.getElementById('btn-approve-current');
+      if (isChosen) {
+        btn.className = 'btn-approve-toggle is-approved';
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Đã duyệt Option ${activeOptionNum} để đăng</span>`;
+      } else {
+        btn.className = 'btn-approve-toggle not-approved';
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Chọn Option ${activeOptionNum} để đăng</span>`;
+      }
+    }
+
+    async function approveActiveOption() {
+      await chooseOption(activeOptionNum);
+    }
+
+    async function chooseOption(num) {
+      if (!currentDetailRow) return;
+      const text = (optionsData[num] || '').trim();
+      if (!text || text === 'Chưa có') {
+        showSimpleAlertModal({
+          title: `Option ${num} chưa có nội dung`,
+          desc: `Bạn chưa soạn nội dung cho <strong>Option ${num}</strong>. Vui lòng nhập nội dung cho Option này hoặc dùng AI tạo content trước khi duyệt đăng!`,
+          actionText: 'Tạo Content Bằng AI',
+          onAction: () => openConfirmModal()
+        });
+        return;
+      }
+      const choice = `Option ${num}`;
+      currentDetailRow.approved_option = choice;
+      currentDetailRow.status = 'publish';
+      document.getElementById('edit-status').value = 'publish';
+      updateStatusSelectStyle();
+
+      updateApprovedBadges(choice);
+      await detailSaveChanges();
+      showToast(`Đã chọn ${choice}! Trạng thái chuyển thành "Sẵn sàng đăng"`);
+    }
+
+    // ── THEO DÕI THAY ĐỔI FORM: nút Lưu chỉ hiện khi có sửa đổi chưa lưu ──
+    let detailSnapshot = null;
+
+    function readDetailFormValues() {
+      const v = (id) => {
+        const el = document.getElementById(id);
+        return el ? (el.value || '') : '';
+      };
+      return {
+        channel: v('edit-channel'),
+        status: v('edit-status'),
+        hook: v('edit-hook'),
+        goal: v('edit-goal'),
+        usp: v('edit-usp'),
+        insight: v('edit-insight'),
+        drive_folder: v('edit-drive-folder'),
+        media_to_post: v('edit-media-to-post'),
+        option_1: optionsData[1] || '',
+        option_2: optionsData[2] || '',
+        option_3: optionsData[3] || ''
+      };
+    }
+
+    function snapshotDetailForm() {
+      detailSnapshot = readDetailFormValues();
+      refreshSaveButton();
+    }
+
+    function isDetailDirty() {
+      if (!detailSnapshot || !currentDetailRow) return false;
+      const cur = readDetailFormValues();
+      return Object.keys(detailSnapshot).some(
+        (k) => String(detailSnapshot[k] || '') !== String(cur[k] || '')
+      );
+    }
+
+    function refreshSaveButton() {
+      const btn = document.getElementById('btn-detail-save');
+      if (!btn) return;
+      const layout = document.querySelector('.detail-layout');
+      const locked = layout ? layout.classList.contains('form-locked-mode') : false;
+      const dirty = isDetailDirty() && !locked;
+      btn.classList.toggle('show-dirty', dirty);
+      const ind = document.getElementById('dirty-indicator');
+      if (ind) ind.classList.toggle('show-dirty', dirty);
+    }
+
+    // Lắng nghe mọi sửa đổi trên form (gắn 1 lần, element tĩnh)
+    ['edit-channel', 'edit-status'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', refreshSaveButton);
+    });
+    ['edit-hook', 'edit-goal', 'edit-usp', 'edit-insight', 'edit-drive-folder',
+     'edit-media-to-post', 'active-opt-textarea',
+     'cmp-textarea-1', 'cmp-textarea-2', 'cmp-textarea-3'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', refreshSaveButton);
+    });
+
+    async function detailSaveChanges() {
+      if (!currentDetailRow) return;
+      const btn = document.getElementById('btn-detail-save');
+      btn.innerHTML = '<span class="spinner-mini" style="width:13px;height:13px;"></span> Đang lưu...';
+      btn.disabled = true;
+
+      const updates = {
+        channel: document.getElementById('edit-channel').value,
+        status: document.getElementById('edit-status').value,
+        hook: document.getElementById('edit-hook').value,
+        goal: document.getElementById('edit-goal').value,
+        usp: document.getElementById('edit-usp').value,
+        insight: document.getElementById('edit-insight').value,
+        drive_folder: document.getElementById('edit-drive-folder').value,
+        media_to_post: document.getElementById('edit-media-to-post').value,
+        option_1: optionsData[1],
+        option_2: optionsData[2],
+        option_3: optionsData[3],
+        approved_option: currentDetailRow.approved_option || '',
+        content_id: currentDetailRow.content_id || '',
+        preset_id: currentDetailRow.preset_id || '',
+        buffer_post_id: currentDetailRow.buffer_post_id || '',
+        live_post_url: currentDetailRow.live_post_url || ''
+      };
+
+      try {
+        const res = await fetch(`/api/sheet/row/${rowNum}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Lỗi lưu thay đổi');
+
+        Object.assign(currentDetailRow, updates);
+        snapshotDetailForm(); // Lưu xong -> hết dirty, ẩn nút Lưu
+        showToast(`Đã lưu thay đổi cho dòng #${rowNum} lên Google Sheet!`);
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      } finally {
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Lưu Thay Đổi`;
+        btn.disabled = false;
+      }
+    }
+
+    /**
+     * TẠO CONTENT BẰNG AI:
+     * 1. Mở Modern Custom Modal
+     * 2. Lưu thay đổi & chuyển trạng thái sang gen_options
+     * 3. Kích hoạt n8n
+     * 4. Bật Live Progress Tracker & Polling tự động nhận diện kết quả
+     */
+    function detailTriggerGenAI() {
+      if (!currentDetailRow) return;
+      openConfirmModal();
+    }
+
+    function openConfirmModal() {
+      const modal = document.getElementById('modal-confirm-gen');
+      const desc = document.getElementById('modal-target-desc');
+      if (desc && currentDetailRow) {
+        desc.innerText = `Chỉ định Dòng #${rowNum} · Kênh: ${currentDetailRow.channel || 'Facebook'}`;
+      }
+      modal.style.display = 'flex';
+    }
+
+    function closeConfirmModal() {
+      const modal = document.getElementById('modal-confirm-gen');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function executeGenAI() {
+      // Guard chống bấm tạo content lại khi bài đang chạy
+      const lockedLayoutAI = document.querySelector('.detail-layout');
+      if (lockedLayoutAI && lockedLayoutAI.classList.contains('form-locked-mode')) {
+        showToast('⏳ Bài này đang chạy, vui lòng đợi xong (hoặc bấm Dừng luồng)!');
+        return;
+      }
+      closeConfirmModal();
+
+      const btn = document.getElementById('btn-detail-gen-ai');
+      btn.disabled = true;
+
+      try {
+        // 1. Tự động chuyển trạng thái dòng sang "gen_options"
+        document.getElementById('edit-status').value = 'gen_options';
+        currentDetailRow.status = 'gen_options';
+        updateStatusSelectStyle();
+        document.getElementById('detail-page-status').innerHTML = '<span class="badge-status status-active"><span class="spinner-mini" style="width:7px;height:7px;border-width:1.5px;"></span>Đang tạo content</span>';
+
+        btn.innerHTML = '<span class="spinner-mini" style="width:13px;height:13px;"></span> Đang xử lý...';
+        showToast('Đang lưu thông tin và kích hoạt tạo content...');
+        await detailSaveChanges();
+
+        // Lấy ID execution hiện tại trước khi trigger để phân biệt luồng cũ
+        let preExecId = null;
+        try {
+          const preRes = await fetch('/api/n8n/latest-execution');
+          const preData = await preRes.json();
+          if (preData.success && preData.execution) {
+            preExecId = preData.execution.id;
+          }
+        } catch (_) {}
+
+        const triggerTime = Date.now();
+
+        // 2. Kích hoạt Live Progress Tracker trên giao diện
+        startAIGenerationTracker(triggerTime, preExecId);
+
+        // 3. Gửi lệnh tạo content qua n8n Webhook
+        const res = await fetch('/api/n8n/trigger', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'content', target_row: rowNum })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Hệ thống đã nhận lệnh và đang tạo 3 Options...`);
+        } else {
+          showToast(`⚠️ ${data.error || 'Có lỗi xảy ra khi gọi n8n'}`);
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      } finally {
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3 1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg> Tạo Content`;
+        btn.disabled = false;
+      }
+    }
+
+    // ============================================================
+    // KHÓA MÀN HÌNH CHỈ ĐỌC KHI ĐANG XỬ LÝ TỰ ĐỘNG
+    // (Tránh người dùng bấm lung tung / sửa nhầm trong lúc n8n đang chạy)
+    // ============================================================
+    function setDetailReadOnlyMode(isLocked, actionName = '') {
+      const formEl = document.querySelector('.detail-layout');
+      const noticeEl = document.getElementById('detail-locked-notice');
+      const headerBtns = [
+        document.getElementById('btn-detail-save'),
+        document.getElementById('btn-detail-gen-ai'),
+        document.getElementById('btn-detail-gen-img'),
+        document.getElementById('btn-detail-buffer')
+      ];
+
+      // 1. Khóa / mở các nút trên Header
+      headerBtns.forEach(btn => {
+        if (!btn) return;
+        if (isLocked) {
+          btn.disabled = true;
+          btn.classList.add('btn-header-locked');
+        } else {
+          btn.disabled = false;
+          btn.classList.remove('btn-header-locked');
+        }
+      });
+
+      // 2. Thêm class khóa vào layout
+      if (formEl) {
+        if (isLocked) {
+          formEl.classList.add('form-locked-mode');
+        } else {
+          formEl.classList.remove('form-locked-mode');
+        }
+      }
+
+      // 3. Khóa / mở các trường nhập liệu
+      const inputs = [
+        'edit-channel', 'edit-status', 'edit-preset-id',
+        'edit-hook', 'edit-media-drive', 'edit-media-to-post',
+        'edit-goal', 'edit-usp', 'edit-insight',
+        'edit-opt-1', 'edit-opt-2', 'edit-opt-3'
+      ];
+      inputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.tagName === 'SELECT') {
+          el.disabled = isLocked;
+        } else {
+          el.readOnly = isLocked;
+        }
+      });
+
+      // Nút duyệt option & so sánh
+      const approveBtn = document.getElementById('btn-approve-current');
+      if (approveBtn) {
+        approveBtn.style.pointerEvents = isLocked ? 'none' : 'auto';
+        approveBtn.style.opacity = isLocked ? '0.6' : '1';
+      }
+
+      const cmpBtns = document.querySelectorAll('.compare-col .btn-action');
+      cmpBtns.forEach(b => {
+        b.disabled = isLocked;
+        b.style.pointerEvents = isLocked ? 'none' : 'auto';
+      });
+
+      // 4. Hiển thị thông báo giải thích
+      if (noticeEl) {
+        noticeEl.style.display = isLocked ? 'flex' : 'none';
+      }
+
+      // 5. Ẩn nút Lưu khi đang khóa (tránh miss-click), mở khóa thì tính lại dirty
+      refreshSaveButton();
+    }
+
+    // ============================================================
+    // LIVE AI PROGRESS TRACKER & AUTO-SYNC POLLING (Không cần F5!)
+    // ============================================================
+    let pollTimer = null;
+    let secondsElapsed = 0;
+    let secondsTimer = null;
+
+    function startAIGenerationTracker(triggeredAt = null, ignoreExecId = null) {
+      setDetailReadOnlyMode(true, 'Tạo Content');
+      const banner = document.getElementById('ai-gen-progress-card');
+      banner.style.display = 'block';
+      banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      document.getElementById('ai-progress-row').innerText = rowNum;
+
+      // Reset Step UI
+      document.getElementById('step-save').className = 'tracker-step step-done';
+      document.getElementById('step-save').innerHTML = '<span class="step-dot">✓</span> <span>1. Chuẩn bị định hướng</span>';
+      document.getElementById('step-n8n').className = 'tracker-step step-running';
+      document.getElementById('step-n8n').innerHTML = '<span class="step-dot"><span class="spinner-mini" style="width:8px;height:8px;border-width:1.5px;"></span></span> <span id="step-n8n-text">2. Viết 3 Options</span>';
+      document.getElementById('step-sync').className = 'tracker-step';
+      document.getElementById('step-sync').innerHTML = '<span class="step-dot">3</span> <span id="step-sync-text">3. Tự động đồng bộ</span>';
+
+      const badge = document.getElementById('ai-progress-badge');
+      if (badge) {
+        badge.className = 'tracker-badge';
+        badge.style.background = '';
+        badge.style.color = '';
+        badge.style.borderColor = '';
+        badge.innerText = 'Đang xử lý';
+      }
+
+      // Start Elapsed Timer
+      secondsElapsed = triggeredAt ? Math.max(0, Math.floor((Date.now() - triggeredAt) / 1000)) : 0;
+      clearInterval(secondsTimer);
+      const mm0 = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+      const ss0 = String(secondsElapsed % 60).padStart(2, '0');
+      document.getElementById('ai-progress-timer').innerText = `${mm0}:${ss0}s`;
+      secondsTimer = setInterval(() => {
+        secondsElapsed++;
+        const mm = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+        const ss = String(secondsElapsed % 60).padStart(2, '0');
+        document.getElementById('ai-progress-timer').innerText = `${mm}:${ss}s`;
+      }, 1000);
+
+      // Snapshot giá trị Options cũ
+      const initialOpt1 = (optionsData[1] || '').trim();
+      const initialOpt2 = (optionsData[2] || '').trim();
+
+      // Bắt đầu Polling kiểm tra trạng thái
+      clearInterval(pollTimer);
+      let attempts = 0;
+
+      const checkFn = async () => {
+        attempts++;
+
+        // 1. Kiểm tra xem n8n có báo lỗi không
+        try {
+          const execRes = await fetch('/api/n8n/latest-execution');
+          const execData = await execRes.json();
+          if (execData.success && execData.execution) {
+            const ex = execData.execution;
+            if (isExecutionRelevantError(ex, triggeredAt, ignoreExecId)) {
+              clearInterval(pollTimer);
+              clearInterval(secondsTimer);
+              pollTimer = null;
+              secondsTimer = null;
+
+              handleTrackerError('ai-progress-badge', 'step-n8n', 'step-sync', ex, 'Tiến trình tạo content gặp sự cố');
+              return;
+            }
+          }
+        } catch (_) {}
+
+        // 2. Polling Google Sheet
+        try {
+          const res = await fetch(`/api/sheet/row/${rowNum}?t=${Date.now()}`);
+          const data = await res.json();
+          if (!data.success || !data.row) return;
+
+          const r = data.row;
+          const opt1New = (r.option_1 || '').trim();
+          const opt2New = (r.option_2 || '').trim();
+
+          const isDone = (opt1New.length > 20 && opt1New !== initialOpt1) ||
+                         (opt2New.length > 20 && opt2New !== initialOpt2);
+
+          if (isDone) {
+            clearInterval(pollTimer);
+            clearInterval(secondsTimer);
+            pollTimer = null;
+            secondsTimer = null;
+
+            // Cập nhật Step States
+            document.getElementById('step-n8n').className = 'tracker-step step-done';
+            document.getElementById('step-n8n').innerHTML = '<span class="step-dot">✓</span> <span>2. Đã tạo xong 3 Options</span>';
+            document.getElementById('step-sync').className = 'tracker-step step-done';
+            document.getElementById('step-sync').innerHTML = '<span class="step-dot">✓</span> <span>3. Đã đồng bộ lên giao diện</span>';
+
+            if (badge) {
+              badge.className = 'tracker-badge';
+              badge.style.background = '#dcfce7';
+              badge.style.color = '#15803d';
+              badge.style.borderColor = '#86efac';
+              badge.innerText = 'Hoàn tất';
+            }
+
+            // Cập nhật ngay vào form
+            currentDetailRow = r;
+            populateDetailForm(r);
+            setDetailReadOnlyMode(false);
+
+            showToast(`Đã hoàn tất tạo 3 Options mới cho Dòng #${rowNum}! (${secondsElapsed}s)`);
+
+            // Tự động ẩn banner sau 6s
+            setTimeout(() => {
+              banner.style.display = 'none';
+            }, 6000);
+          }
+        } catch (_) {}
+
+        // Dừng polling sau 90 giây nếu n8n bị kẹt
+        if (attempts >= 26) {
+          clearInterval(pollTimer);
+          clearInterval(secondsTimer);
+          pollTimer = null;
+          secondsTimer = null;
+          setDetailReadOnlyMode(false);
+          if (badge) {
+            badge.className = 'tracker-badge';
+            badge.style.background = '#fef3c7';
+            badge.style.color = '#b45309';
+            badge.style.borderColor = '#fde68a';
+            badge.innerText = 'Hết thời gian chờ';
+          }
+          document.getElementById('step-n8n').className = 'tracker-step';
+          document.getElementById('step-n8n').innerHTML = '<span class="step-dot">-</span> <span>2. Tiến trình mất nhiều thời gian hơn dự kiến</span>';
+          document.getElementById('step-sync').className = 'tracker-step';
+          document.getElementById('step-sync').innerHTML = '<span class="step-dot">-</span> <span>3. Nhấn "Dừng luồng" để dừng hoặc kiểm tra n8n</span>';
+        }
+      };
+
+      checkFn(); // Chạy ngay lập tức kiểm tra lỗi
+      pollTimer = setInterval(checkFn, 3500);
+    }
+
+    // ============================================================
+    // LIVE BUFFER PUBLISHING PROGRESS TRACKER & AUTO-SYNC POLLING
+    // ============================================================
+    let pubPollTimer = null;
+    let pubSecondsElapsed = 0;
+    let pubSecondsTimer = null;
+
+    function startPublishProgressTracker(triggeredAt = null, ignoreExecId = null) {
+      setDetailReadOnlyMode(true, 'Đăng Buffer');
+      const banner = document.getElementById('buffer-publish-progress-card');
+      if (!banner) return;
+      banner.style.display = 'block';
+      banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      document.getElementById('publish-progress-row').innerText = rowNum;
+
+      // Reset Step UI
+      document.getElementById('step-pub-save').className = 'tracker-step step-done';
+      document.getElementById('step-pub-save').innerHTML = '<span class="step-dot">✓</span> <span>1. Đã chốt Option đã duyệt</span>';
+      document.getElementById('step-pub-n8n').className = 'tracker-step step-running';
+      document.getElementById('step-pub-n8n').innerHTML = '<span class="step-dot"><span class="spinner-mini" style="width:8px;height:8px;border-width:1.5px;"></span></span> <span id="step-pub-n8n-text">2. Xử lý media & đẩy Buffer</span>';
+      document.getElementById('step-pub-sync').className = 'tracker-step';
+      document.getElementById('step-pub-sync').innerHTML = '<span class="step-dot">3</span> <span id="step-pub-sync-text">3. Xác nhận hoàn tất</span>';
+
+      const badge = document.getElementById('publish-progress-badge');
+      if (badge) {
+        badge.className = 'tracker-badge';
+        badge.style.background = '';
+        badge.style.color = '';
+        badge.style.borderColor = '';
+        badge.innerText = 'Đang đăng bài';
+      }
+
+      // Start Timer
+      pubSecondsElapsed = triggeredAt ? Math.max(0, Math.floor((Date.now() - triggeredAt) / 1000)) : 0;
+      clearInterval(pubSecondsTimer);
+      const mm0 = String(Math.floor(pubSecondsElapsed / 60)).padStart(2, '0');
+      const ss0 = String(pubSecondsElapsed % 60).padStart(2, '0');
+      document.getElementById('publish-progress-timer').innerText = `${mm0}:${ss0}s`;
+      pubSecondsTimer = setInterval(() => {
+        pubSecondsElapsed++;
+        const mm = String(Math.floor(pubSecondsElapsed / 60)).padStart(2, '0');
+        const ss = String(pubSecondsElapsed % 60).padStart(2, '0');
+        document.getElementById('publish-progress-timer').innerText = `${mm}:${ss}s`;
+      }, 1000);
+
+      // Polling kiểm tra trạng thái Sheet xem n8n đã đổi sang 'posted' chưa
+      clearInterval(pubPollTimer);
+      let attempts = 0;
+
+      const checkPublishFn = async () => {
+        attempts++;
+
+        // 1. Kiểm tra xem n8n có báo lỗi không
+        try {
+          const execRes = await fetch('/api/n8n/latest-execution');
+          const execData = await execRes.json();
+          if (execData.success && execData.execution) {
+            const ex = execData.execution;
+            if (isExecutionRelevantError(ex, triggeredAt, ignoreExecId)) {
+              clearInterval(pubPollTimer);
+              clearInterval(pubSecondsTimer);
+              pubPollTimer = null;
+              pubSecondsTimer = null;
+
+              handleTrackerError('publish-progress-badge', 'step-pub-n8n', 'step-pub-sync', ex, 'Tiến trình đăng bài gặp sự cố');
+              return;
+            }
+          }
+        } catch (_) {}
+
+        // 2. Polling Google Sheet
+        try {
+          const res = await fetch(`/api/sheet/row/${rowNum}?t=${Date.now()}`);
+          const data = await res.json();
+          if (!data.success || !data.row) return;
+
+          const r = data.row;
+          const status = (r.status || '').toLowerCase().trim();
+
+          // Khi n8n đã hoàn tất (status chuyển thành 'posted')
+          if (status === 'posted') {
+            clearInterval(pubPollTimer);
+            clearInterval(pubSecondsTimer);
+            pubPollTimer = null;
+            pubSecondsTimer = null;
+
+            document.getElementById('step-pub-n8n').className = 'tracker-step step-done';
+            document.getElementById('step-pub-n8n').innerHTML = '<span class="step-dot">✓</span> <span>2. Đã chuyển bài sang Buffer</span>';
+            document.getElementById('step-pub-sync').className = 'tracker-step step-done';
+            document.getElementById('step-pub-sync').innerHTML = '<span class="step-dot">✓</span> <span>3. Đã xuất bản thành công</span>';
+
+            if (badge) {
+              badge.className = 'tracker-badge';
+              badge.style.background = '#dcfce7';
+              badge.style.color = '#15803d';
+              badge.style.borderColor = '#86efac';
+              badge.innerText = 'Đã xuất bản';
+            }
+
+            // Đồng bộ lại form và header
+            currentDetailRow = r;
+            populateDetailForm(r);
+            setDetailReadOnlyMode(false);
+            document.getElementById('edit-status').value = 'posted';
+            document.getElementById('detail-page-status').innerHTML = '<span class="badge-status status-posted"><span class="status-dot"></span>Đã xuất bản</span>';
+
+            showToast(`Dòng #${rowNum} đã được xuất bản thành công lên Buffer! (${pubSecondsElapsed}s)`);
+
+            setTimeout(() => {
+              banner.style.display = 'none';
+            }, 6000);
+          }
+        } catch (_) {}
+
+        if (attempts >= 40) { // 120s timeout
+          clearInterval(pubPollTimer);
+          clearInterval(pubSecondsTimer);
+          pubPollTimer = null;
+          pubSecondsTimer = null;
+          setDetailReadOnlyMode(false);
+          if (badge) {
+            badge.className = 'tracker-badge';
+            badge.style.background = '#fef3c7';
+            badge.style.color = '#b45309';
+            badge.style.borderColor = '#fde68a';
+            badge.innerText = 'Hết thời gian chờ';
+          }
+          document.getElementById('step-pub-n8n').className = 'tracker-step';
+          document.getElementById('step-pub-n8n').innerHTML = '<span class="step-dot">-</span> <span>2. Đang tiếp tục xử lý hoặc kiểm tra n8n</span>';
+          document.getElementById('step-pub-sync').className = 'tracker-step';
+          document.getElementById('step-pub-sync').innerHTML = '<span class="step-dot">-</span> <span>3. Nhấn "Dừng luồng" để dừng hoặc kiểm tra lại</span>';
+        }
+      };
+
+      checkPublishFn(); // Chạy ngay lập tức để nhận diện lỗi nếu có
+      pubPollTimer = setInterval(checkPublishFn, 3000);
+    }
+
+    function detailHasContent() {
+      const o1 = (optionsData[1] || '').trim();
+      const o2 = (optionsData[2] || '').trim();
+      const o3 = (optionsData[3] || '').trim();
+      return Boolean(
+        (o1 && o1 !== 'Chưa có') ||
+        (o2 && o2 !== 'Chưa có') ||
+        (o3 && o3 !== 'Chưa có')
+      );
+    }
+
+    function openPublishBufferModal() {
+      // Giờ hẹn đã qua thì Buffer từ chối — chặn ngay với hướng dẫn rõ (giờ Sheet = giờ VN).
+      const schedRaw = (currentDetailRow && currentDetailRow.scheduled_time) ? String(currentDetailRow.scheduled_time).trim() : '';
+      if (schedRaw) {
+        let t = NaN;
+        const pad2d = (n) => String(n).padStart(2, '0');
+        const m = schedRaw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})[ T](\d{1,2}):(\d{2})(?::(\d{2}))?/);
+        if (m) t = Date.parse(`${m[1]}-${pad2d(m[2])}-${pad2d(m[3])}T${pad2d(m[4])}:${m[5]}:${m[6] || '00'}+07:00`);
+        else if (/([Zz]|[+-]\d{2}:?\d{2})$/.test(schedRaw)) { const d = new Date(schedRaw); if (!isNaN(d.getTime())) t = d.getTime(); }
+        if (!isNaN(t) && t <= Date.now()) {
+          showToast(`⏳ Giờ hẹn "${schedRaw}" đã qua — sửa giờ mới trên bảng (cột Thời Gian Đăng) rồi đăng lại!`, 'warning');
+          return;
+        }
+      }
+      if (!currentDetailRow || !currentDetailRow.approved_option) {
+        if (currentDetailRow) currentDetailRow.approved_option = 'Option 1';
+      }
+      if (!detailHasContent()) {
+        showSimpleAlertModal({
+          title: 'Chưa có nội dung để đăng bài',
+          desc: `Bài viết <strong>Dòng #${rowNum}</strong> hiện chưa có nội dung (cả 3 Option đều trống). Vui lòng soạn nội dung hoặc tạo nội dung bằng AI trước khi đăng lên Buffer!`,
+          actionText: 'Tạo Content Bằng AI',
+          onAction: () => openConfirmModal()
+        });
+        return;
+      }
+      const modal = document.getElementById('modal-confirm-buffer');
+      const desc = document.getElementById('modal-buffer-target-desc');
+      const optSpan = document.getElementById('modal-buffer-chosen-opt');
+      if (desc && currentDetailRow) {
+        desc.innerText = `Chỉ định Dòng #${rowNum} · Kênh: ${currentDetailRow.channel || 'Facebook'} · ${currentDetailRow.approved_option}`;
+      }
+      if (optSpan && currentDetailRow) {
+        optSpan.innerText = currentDetailRow.approved_option;
+      }
+      modal.style.display = 'flex';
+    }
+
+    function closeBufferModal() {
+      const modal = document.getElementById('modal-confirm-buffer');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function executePublishBuffer() {
+      // Guard chống bấm đăng lại khi bài đang chạy (modal đóng rồi mở lại vẫn chặn được)
+      const lockedLayout = document.querySelector('.detail-layout');
+      if (lockedLayout && lockedLayout.classList.contains('form-locked-mode')) {
+        showToast('⏳ Bài này đang chạy, vui lòng đợi xong (hoặc bấm Dừng luồng)!');
+        return;
+      }
+      closeBufferModal();
+
+      const btn = document.getElementById('btn-detail-buffer');
+      btn.innerHTML = '<span class="spinner-mini" style="width:13px;height:13px;"></span> Đang xử lý...';
+      btn.disabled = true;
+
+      try {
+        currentDetailRow.status = 'publish';
+        document.getElementById('edit-status').value = 'publish';
+        document.getElementById('detail-page-status').innerHTML = '<span class="badge-status status-publish"><span class="status-dot"></span>Sẵn sàng đăng</span>';
+        await detailSaveChanges();
+
+        // Lấy ID execution hiện tại trước khi trigger để tránh nhận nhầm lỗi cũ
+        let preExecId = null;
+        try {
+          const preRes = await fetch('/api/n8n/latest-execution');
+          const preData = await preRes.json();
+          if (preData.success && preData.execution) {
+            preExecId = preData.execution.id;
+          }
+        } catch (_) {}
+
+        const triggerTime = Date.now();
+        startPublishProgressTracker(triggerTime, preExecId);
+
+        showToast(`Đang kích hoạt n8n xử lý media và đẩy bài Dòng #${rowNum}...`);
+
+        const res = await fetch('/api/n8n/trigger', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'publish',
+            target_row: rowNum
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Hệ thống đã nhận lệnh đăng bài Dòng #${rowNum}...`);
+        } else {
+          throw new Error(data.error || 'Có lỗi xảy ra khi kích hoạt n8n');
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      } finally {
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg> Đăng Buffer`;
+        btn.disabled = false;
+      }
+    }
+
+    // ============================================================
+    // LIVE AI IMAGE GENERATION TRACKER & AUTO-SYNC POLLING
+    // ============================================================
+    let imgPollTimer = null;
+    let imgSecondsElapsed = 0;
+    let imgSecondsTimer = null;
+
+    function startImageGenerationTracker(triggeredAt = null, ignoreExecId = null) {
+      setDetailReadOnlyMode(true, 'Tạo Ảnh AI');
+      const banner = document.getElementById('ai-img-progress-card');
+      if (!banner) return;
+      banner.style.display = 'block';
+      banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      document.getElementById('img-progress-row').innerText = rowNum;
+
+      // Reset steps
+      const stepSave = document.getElementById('step-img-save');
+      if (stepSave) {
+        stepSave.className = 'tracker-step step-done';
+        stepSave.innerHTML = '<span class="step-dot">✓</span> <span>1. Chuẩn bị thông số ảnh</span>';
+      }
+      const stepN8n = document.getElementById('step-img-n8n');
+      if (stepN8n) {
+        stepN8n.className = 'tracker-step step-running';
+        stepN8n.innerHTML = '<span class="step-dot"><span class="spinner-mini" style="width:8px;height:8px;border-width:1.5px;"></span></span> <span id="step-img-n8n-text">2. Sinh ảnh & ghép layout</span>';
+      }
+      const stepSync = document.getElementById('step-img-sync');
+      if (stepSync) {
+        stepSync.className = 'tracker-step';
+        stepSync.innerHTML = '<span class="step-dot">3</span> <span id="step-img-sync-text">3. Tải lên Drive & cập nhật</span>';
+      }
+
+      const badge = document.getElementById('img-progress-badge');
+      if (badge) {
+        badge.className = 'tracker-badge';
+        badge.style.background = '';
+        badge.style.color = '';
+        badge.style.borderColor = '';
+        badge.innerText = 'Đang tạo ảnh';
+      }
+
+      // Reset & start timer
+      clearInterval(imgSecondsTimer);
+      imgSecondsElapsed = triggeredAt ? Math.max(0, Math.floor((Date.now() - triggeredAt) / 1000)) : 0;
+      const timerEl = document.getElementById('img-progress-timer');
+      const mm0 = String(Math.floor(imgSecondsElapsed / 60)).padStart(2, '0');
+      const ss0 = String(imgSecondsElapsed % 60).padStart(2, '0');
+      if (timerEl) timerEl.innerText = `${mm0}:${ss0}s`;
+
+      imgSecondsTimer = setInterval(() => {
+        imgSecondsElapsed++;
+        const mm = String(Math.floor(imgSecondsElapsed / 60)).padStart(2, '0');
+        const ss = String(imgSecondsElapsed % 60).padStart(2, '0');
+        if (timerEl) timerEl.innerText = `${mm}:${ss}s`;
+      }, 1000);
+
+      // Polling Google Sheet every 3s
+      clearInterval(imgPollTimer);
+      let attempts = 0;
+
+      const checkImgFn = async () => {
+        attempts++;
+
+        // 1. Kiểm tra xem n8n có báo lỗi không
+        try {
+          const execRes = await fetch('/api/n8n/latest-execution');
+          const execData = await execRes.json();
+          if (execData.success && execData.execution) {
+            const ex = execData.execution;
+            if (isExecutionRelevantError(ex, triggeredAt, ignoreExecId)) {
+              clearInterval(imgPollTimer);
+              clearInterval(imgSecondsTimer);
+              imgPollTimer = null;
+              imgSecondsTimer = null;
+
+              handleTrackerError('img-progress-badge', 'step-img-n8n', 'step-img-sync', ex, 'Tiến trình tạo ảnh gặp sự cố');
+              return;
+            }
+          }
+        } catch (_) {}
+
+        // 2. Polling Google Sheet
+        try {
+          const res = await fetch(`/api/sheet/row/${rowNum}?_t=${Date.now()}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          if (!data.success || !data.row) return;
+
+          const item = data.row;
+          const st = String(item.status || '').trim().toLowerCase();
+
+          // Khi trạng thái đã rời khỏi gen_images (ví dụ: waiting_review, publish, posted...)
+          if (st !== 'gen_images' && st !== '') {
+            clearInterval(imgPollTimer);
+            clearInterval(imgSecondsTimer);
+            imgPollTimer = null;
+            imgSecondsTimer = null;
+
+            if (stepN8n) {
+              stepN8n.className = 'tracker-step step-done';
+              stepN8n.innerHTML = '<span class="step-dot">✓</span> <span>2. Đã hoàn tất sinh ảnh & ghép layout</span>';
+            }
+            if (stepSync) {
+              stepSync.className = 'tracker-step step-done';
+              stepSync.innerHTML = '<span class="step-dot">✓</span> <span>3. Đã tải ảnh lên Drive</span>';
+            }
+            if (badge) {
+              badge.className = 'tracker-badge';
+              badge.style.background = '#dcfce7';
+              badge.style.color = '#15803d';
+              badge.style.borderColor = '#86efac';
+              badge.innerText = 'Hoàn tất';
+            }
+
+            showToast(`Hoàn tất tạo ảnh cho Dòng #${rowNum}! (${imgSecondsElapsed}s)`);
+            currentDetailRow = item;
+            populateDetailForm(item);
+            setDetailReadOnlyMode(false);
+
+            setTimeout(() => {
+              if (banner) banner.style.display = 'none';
+            }, 6000);
+          }
+        } catch (err) {
+          console.warn('Lỗi polling tạo ảnh:', err);
+        }
+
+        if (attempts >= 40) { // 120s timeout
+          clearInterval(imgPollTimer);
+          clearInterval(imgSecondsTimer);
+          imgPollTimer = null;
+          imgSecondsTimer = null;
+          setDetailReadOnlyMode(false);
+          if (badge) {
+            badge.className = 'tracker-badge';
+            badge.style.background = '#fef3c7';
+            badge.style.color = '#b45309';
+            badge.style.borderColor = '#fde68a';
+            badge.innerText = 'Hết thời gian chờ';
+          }
+          if (stepN8n) {
+            stepN8n.className = 'tracker-step';
+            stepN8n.innerHTML = '<span class="step-dot">-</span> <span>2. Đang tiếp tục xử lý hoặc kiểm tra n8n</span>';
+          }
+          if (stepSync) {
+            stepSync.className = 'tracker-step';
+            stepSync.innerHTML = '<span class="step-dot">-</span> <span>3. Nhấn "Dừng luồng" để dừng hoặc kiểm tra lại</span>';
+          }
+        }
+      };
+
+      checkImgFn(); // Chạy ngay lập tức
+      imgPollTimer = setInterval(checkImgFn, 3000);
+    }
+
+    // Dừng n8n execution.
+    // Lưu ý: n8n chạy 1 execution duy nhất cho toàn bộ batch,
+    // nên dừng từ bất kỳ trang chi tiết nào sẽ dừng cả batch.
+    // Điều này là đúng và không thể tránh khỏi về mặt kỹ thuật.
+    async function stopN8nExecutions() {
+      try {
+        const res = await fetch('/api/n8n/stop', { method: 'POST' });
+        const data = await res.json();
+        if (data.success && data.stoppedCount > 0) {
+          showToast(`⏹ Đã dừng luồng n8n (${data.stoppedCount} tiến trình). Các bài đang xử lý trong cùng batch cũng bị dừng.`, 'warning');
+        }
+      } catch (err) {
+        console.warn('Lỗi gọi /api/n8n/stop:', err);
+      }
+    }
+
+    async function stopAIGenerationTracker(resetStatus = true) {
+      clearInterval(pollTimer);
+      clearInterval(secondsTimer);
+      pollTimer = null;
+      secondsTimer = null;
+
+      const banner = document.getElementById('ai-gen-progress-card');
+      if (banner) banner.style.display = 'none';
+
+      setDetailReadOnlyMode(false);
+      await stopN8nExecutions();
+
+      if (resetStatus && currentDetailRow && currentDetailRow.status === 'gen_options') {
+        document.getElementById('edit-status').value = 'waiting_review';
+        currentDetailRow.status = 'waiting_review';
+        updateStatusSelectStyle();
+        document.getElementById('detail-page-status').innerHTML = '<span class="badge-status status-waiting"><span class="status-dot"></span>Chờ duyệt</span>';
+        await detailSaveChanges();
+        showToast('Đã dừng luồng tạo content & khôi phục về Chờ duyệt');
+      } else {
+        showToast('Đã dừng theo dõi tiến trình');
+      }
+    }
+
+    async function stopPublishProgressTracker(resetStatus = true) {
+      clearInterval(pubPollTimer);
+      clearInterval(pubSecondsTimer);
+      pubPollTimer = null;
+      pubSecondsTimer = null;
+
+      const banner = document.getElementById('buffer-publish-progress-card');
+      if (banner) banner.style.display = 'none';
+
+      setDetailReadOnlyMode(false);
+      await stopN8nExecutions();
+
+      if (resetStatus && currentDetailRow && currentDetailRow.status === 'publish') {
+        document.getElementById('edit-status').value = 'waiting_review';
+        currentDetailRow.status = 'waiting_review';
+        updateStatusSelectStyle();
+        document.getElementById('detail-page-status').innerHTML = '<span class="badge-status status-waiting"><span class="status-dot"></span>Chờ duyệt</span>';
+        await detailSaveChanges();
+        showToast('Đã dừng luồng xuất bản & khôi phục về Chờ duyệt');
+      } else {
+        showToast('Đã dừng theo dõi tiến trình');
+      }
+    }
+
+    async function stopImageGenerationTracker(resetStatus = true) {
+      clearInterval(imgPollTimer);
+      clearInterval(imgSecondsTimer);
+      imgPollTimer = null;
+      imgSecondsTimer = null;
+
+      const banner = document.getElementById('ai-img-progress-card');
+      if (banner) banner.style.display = 'none';
+
+      setDetailReadOnlyMode(false);
+      await stopN8nExecutions();
+
+      if (resetStatus && currentDetailRow && currentDetailRow.status === 'gen_images') {
+        document.getElementById('edit-status').value = 'waiting_review';
+        currentDetailRow.status = 'waiting_review';
+        updateStatusSelectStyle();
+        document.getElementById('detail-page-status').innerHTML = '<span class="badge-status status-waiting"><span class="status-dot"></span>Chờ duyệt</span>';
+        await detailSaveChanges();
+        showToast('Đã dừng luồng tạo ảnh & khôi phục về Chờ duyệt');
+      } else {
+        showToast('Đã dừng theo dõi tiến trình');
+      }
+    }
+
+    function openGenImageModal() {
+      if (!detailHasContent()) {
+        showSimpleAlertModal({
+          title: 'Chưa có nội dung để tạo ảnh',
+          desc: `Bài viết <strong>Dòng #${rowNum}</strong> hiện chưa có nội dung (content). Hệ thống cần nội dung bài viết để AI phân tích và tạo ảnh minh họa phù hợp! Vui lòng tạo nội dung trước.`,
+          actionText: 'Tạo Content Bằng AI',
+          onAction: () => openConfirmModal()
+        });
+        return;
+      }
+      const modal = document.getElementById('modal-confirm-img');
+      const desc = document.getElementById('modal-img-target-desc');
+      const rowNumSpan = document.getElementById('modal-img-row-num');
+      if (desc && currentDetailRow) {
+        desc.innerText = `Chỉ định Dòng #${rowNum} · Kênh: ${currentDetailRow.channel || 'Facebook'}`;
+      }
+      if (rowNumSpan) {
+        rowNumSpan.innerText = rowNum;
+      }
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeGenImageModal() {
+      const modal = document.getElementById('modal-confirm-img');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function executeGenImageAI() {
+      // Guard chống bấm tạo ảnh lại khi bài đang chạy
+      const lockedLayoutImg = document.querySelector('.detail-layout');
+      if (lockedLayoutImg && lockedLayoutImg.classList.contains('form-locked-mode')) {
+        showToast('⏳ Bài này đang chạy, vui lòng đợi xong (hoặc bấm Dừng luồng)!');
+        return;
+      }
+      closeGenImageModal();
+
+      const btn = document.getElementById('btn-detail-gen-img');
+      btn.disabled = true;
+
+      try {
+        document.getElementById('edit-status').value = 'gen_images';
+        currentDetailRow.status = 'gen_images';
+        updateStatusSelectStyle();
+        document.getElementById('detail-page-status').innerHTML = '<span class="badge-status status-active"><span class="spinner-mini" style="width:7px;height:7px;border-width:1.5px;"></span>Đang tạo ảnh</span>';
+
+        btn.innerHTML = '<span class="spinner-mini" style="width:13px;height:13px;"></span> Đang xử lý...';
+        showToast('Đang lưu thông tin và kích hoạt tạo ảnh AI...');
+        await detailSaveChanges();
+
+        // Lấy ID execution hiện tại trước khi trigger để phân biệt luồng cũ
+        let preExecId = null;
+        try {
+          const preRes = await fetch('/api/n8n/latest-execution');
+          const preData = await preRes.json();
+          if (preData.success && preData.execution) {
+            preExecId = preData.execution.id;
+          }
+        } catch (_) {}
+
+        const triggerTime = Date.now();
+        startImageGenerationTracker(triggerTime, preExecId);
+
+        const res = await fetch('/api/n8n/trigger', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'images', target_row: rowNum })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Hệ thống đã nhận lệnh và đang tạo ảnh cho Dòng #${rowNum}...`);
+        } else {
+          showToast(`⚠️ ${data.error || 'Có lỗi xảy ra khi gọi n8n'}`);
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      } finally {
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg> Tạo Ảnh AI`;
+        btn.disabled = false;
+      }
+    }
+
+    loadRowDetail();
+  </script>
+
+  <!-- CUSTOM MODERN CONFIRMATION MODAL: TẠO CONTENT -->
+  <div id="modal-confirm-gen" class="modal-backdrop" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="modal-icon-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 14.5px; font-weight: 700; color: #0f172a;">Tạo nội dung bằng AI</h3>
+            <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;" id="modal-target-desc">Chỉ định Dòng #5</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeConfirmModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-info-card">
+          <div style="font-weight: 600; font-size: 12.5px; color: #0f172a; margin-bottom: 8px;">
+            Quy trình thực hiện:
+          </div>
+          <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #475569; line-height: 1.65;">
+            <li>Lưu toàn bộ định hướng (Mục đích, USP, Insight khách hàng) lên Google Sheet.</li>
+            <li>Chuyển trạng thái dòng thành <strong>Chờ AI Gen (gen_options)</strong>.</li>
+            <li>Hệ thống sinh <strong>3 phương án nội dung (Option 1, 2, 3)</strong> hoàn toàn mới.</li>
+            <li>Tiến trình chạy nền và tự động cập nhật kết quả lên màn hình khi hoàn tất.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-action" onclick="closeConfirmModal()">Hủy</button>
+        <button class="btn-action btn-action-primary" onclick="executeGenAI()" id="btn-modal-confirm-exec">
+          Bắt đầu tạo Content
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOM MODERN CONFIRMATION MODAL: BUFFER -->
+  <div id="modal-confirm-buffer" class="modal-backdrop" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="modal-icon-box" style="background: #f0fdf4; color: #15803d;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 14.5px; font-weight: 700; color: #0f172a;">Xuất bản bài viết lên Buffer</h3>
+            <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;" id="modal-buffer-target-desc">Chỉ định Dòng #5 · Kênh: Facebook Group</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeBufferModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-info-card" style="background: #f0fdf4; border-color: #bbf7d0;">
+          <div style="font-weight: 600; font-size: 12.5px; color: #166534; margin-bottom: 8px;">
+            Quy trình xuất bản:
+          </div>
+          <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #166534; line-height: 1.65;">
+            <li>Sử dụng nội dung bài viết từ <strong><span id="modal-buffer-chosen-opt">Option</span></strong> đã được phê duyệt.</li>
+            <li>Tự động lấy media từ Google Drive, chuẩn hóa và đóng watermark bản quyền Ecolar.</li>
+            <li>Đẩy bài viết sang hàng chờ xuất bản của <strong>Buffer</strong> để chuẩn bị đăng.</li>
+            <li>Cập nhật trạng thái dòng thành <strong>Sẵn sàng đăng (publish)</strong> trên Google Sheet.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-action" onclick="closeBufferModal()">Hủy</button>
+        <button class="btn-action btn-action-primary" onclick="executePublishBuffer()" id="btn-modal-buffer-exec">
+          Xác nhận đăng bài
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOM MODERN CONFIRMATION MODAL: TẠO ẢNH AI -->
+  <div id="modal-confirm-img" class="modal-backdrop" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="modal-icon-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 14.5px; font-weight: 700; color: #0f172a;">Tạo ảnh minh họa bằng AI</h3>
+            <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;" id="modal-img-target-desc">Chỉ định Dòng #... · Kênh: ...</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeGenImageModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-info-card">
+          <div style="font-weight: 600; font-size: 12.5px; color: #0f172a; margin-bottom: 8px;">
+            Quy trình tạo ảnh:
+          </div>
+          <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #475569; line-height: 1.65;">
+            <li>Cập nhật trạng thái dòng này thành <strong>gen_images</strong> trên Google Sheet.</li>
+            <li>Kích hoạt tiến trình tạo ảnh riêng biệt cho <strong>Dòng #<span id="modal-img-row-num">...</span></strong>.</li>
+            <li>Hệ thống tạo ảnh AI theo định hướng, ghép khung nhận diện thương hiệu Ecolar.</li>
+            <li>Tự động lưu ảnh vào thư mục Google Drive tương ứng và chuyển về <strong>Chờ duyệt</strong> khi xong.</li>
+          </ul>
+        </div>
+        <div style="margin-top: 10px; font-size: 11.5px; color: #b45309; background: #fffbeb; padding: 8px 12px; border-radius: 6px; border: 1px solid #fef3c7;">
+          Lưu ý: Quá trình tạo ảnh mất khoảng 20 - 45 giây tùy thuộc vào độ phân giải và hàng đợi.
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-action" onclick="closeGenImageModal()">Hủy</button>
+        <button class="btn-action btn-action-primary" onclick="executeGenImageAI()" id="btn-modal-img-exec">
+          Bắt đầu tạo ảnh
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOM SIMPLE ALERT MODAL -->
+  <div id="modal-simple-alert" class="modal-backdrop" style="display: none;" onclick="if(event.target===this) closeSimpleAlertModal();">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="modal-icon-box" style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 14.5px; font-weight: 700; color: #0f172a;" id="simple-alert-title">Thông báo</h3>
+            <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">Hệ thống yêu cầu nội dung bài viết</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeSimpleAlertModal()" title="Đóng (Esc)">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px 20px;">
+        <p id="simple-alert-desc" style="margin: 0 0 12px; font-size: 13px; line-height: 1.55; color: #334155;"></p>
+        <div id="simple-alert-extra" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #64748b;">
+        </div>
+      </div>
+
+      <div class="modal-footer" style="padding: 12px 20px; background: #fafafa; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px;">
+        <button class="btn-action" onclick="closeSimpleAlertModal()" id="simple-alert-btn-close">Đã hiểu</button>
+        <button class="btn-action btn-action-primary" id="simple-alert-btn-action" style="display: none; background: #7e22ce; border-color: #6b21a8;">
+          Tạo Content Bằng AI
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── QUẢN LÝ MODAL THÔNG BÁO ĐƠN GIẢN (SIMPLE ALERT MODAL) ──
+    function showSimpleAlertModal({ title, desc, extraHtml = '', actionText = '', onAction = null }) {
+      const titleEl = document.getElementById('simple-alert-title');
+      const descEl = document.getElementById('simple-alert-desc');
+      const extraEl = document.getElementById('simple-alert-extra');
+      const actBtn = document.getElementById('simple-alert-btn-action');
+
+      if (titleEl) titleEl.innerText = title || 'Thông báo';
+      if (descEl) descEl.innerHTML = desc || '';
+
+      if (extraEl) {
+        if (extraHtml) {
+          extraEl.innerHTML = extraHtml;
+          extraEl.style.display = 'block';
+        } else {
+          extraEl.style.display = 'none';
+        }
+      }
+
+      if (actBtn) {
+        if (actionText && typeof onAction === 'function') {
+          actBtn.innerText = actionText;
+          actBtn.style.display = 'inline-flex';
+          actBtn.onclick = () => {
+            closeSimpleAlertModal();
+            onAction();
+          };
+        } else {
+          actBtn.style.display = 'none';
+        }
+      }
+
+      const modal = document.getElementById('modal-simple-alert');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeSimpleAlertModal() {
+      const modal = document.getElementById('modal-simple-alert');
+      if (modal) modal.style.display = 'none';
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeSimpleAlertModal();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nhật Ký & Giám Sát Tự Động Hóa — Content Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/dashboard.css">
+  <style>
+    /* Full-Screen Compact Terminal Layout */
+    .terminal-console-wrapper {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 160px);
+      min-height: 560px;
+      background: #0b1120;
+      border: 1px solid #1e293b;
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+    }
+
+    /* Terminal Header Bar */
+    .terminal-top-bar {
+      background: #0f172a;
+      padding: 10px 16px;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .terminal-status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #94a3b8;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .pulse-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulseLive 2s infinite;
+    }
+    @keyframes pulseLive {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Filter Pills */
+    .terminal-filters {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .t-filter-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .t-filter-btn:hover {
+      background: #334155;
+      color: #ffffff;
+    }
+    .t-filter-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #38bdf8;
+    }
+
+    /* Search Box */
+    .terminal-search {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      color: #f1f5f9;
+      padding: 4px 10px;
+      font-size: 11.5px;
+      font-family: 'JetBrains Mono', monospace;
+      outline: none;
+      width: 180px;
+      transition: all 0.15s;
+    }
+    .terminal-search:focus {
+      border-color: #38bdf8;
+      width: 210px;
+      background: #0f172a;
+    }
+
+    /* Action Tools */
+    .terminal-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .t-tool-btn {
+      background: transparent;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .t-tool-btn:hover {
+      background: #1e293b;
+      color: #ffffff;
+      border-color: #475569;
+    }
+
+    /* Scrollable Terminal Output Body */
+    .terminal-content-area {
+      flex: 1;
+      padding: 14px 18px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.65;
+      color: #cbd5e1;
+      background: #060911;
+    }
+
+    /* Structured Detailed Log Entry */
+    .log-item {
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      background: rgba(15, 23, 42, 0.45);
+      border-left: 3px solid #334155;
+      transition: background 0.15s;
+    }
+    .log-item:hover {
+      background: rgba(30, 41, 59, 0.6);
+    }
+    .log-item.level-success { border-left-color: #10b981; }
+    .log-item.level-info { border-left-color: #0284c7; }
+    .log-item.level-warn { border-left-color: #f59e0b; }
+    .log-item.level-error { border-left-color: #ef4444; background: rgba(127, 29, 29, 0.15); }
+
+    .log-main-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 3px;
+    }
+    .log-time {
+      color: #64748b;
+      font-size: 11px;
+    }
+    .log-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 1px 7px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .badge-tag-content { background: rgba(2, 132, 199, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-tag-sheet { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+    .badge-tag-publish { background: rgba(147, 51, 234, 0.2); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.3); }
+    .badge-tag-n8n { background: rgba(37, 99, 235, 0.2); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); }
+    .badge-tag-row { background: #334155; color: #f8fafc; font-weight: 800; }
+    .badge-tag-error { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+
+    .log-title {
+      font-weight: 700;
+      color: #f1f5f9;
+      font-size: 12.5px;
+    }
+    .log-link {
+      color: #38bdf8;
+      text-decoration: none;
+      font-size: 11px;
+      padding: 1px 6px;
+      background: rgba(56, 189, 248, 0.1);
+      border-radius: 4px;
+      margin-left: auto;
+    }
+    .log-link:hover {
+      background: rgba(56, 189, 248, 0.25);
+      text-decoration: underline;
+    }
+
+    /* Sub-Branches Details */
+    .log-sub-branch {
+      margin-left: 20px;
+      font-size: 11.5px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+    .branch-prefix {
+      color: #475569;
+      font-family: monospace;
+      margin-right: 4px;
+    }
+    .branch-key {
+      color: #cbd5e1;
+      font-weight: 600;
+    }
+    .branch-val {
+      color: #94a3b8;
+    }
+    .branch-highlight {
+      color: #38bdf8;
+    }
+
+    /* Terminal Footer Status Bar */
+    .terminal-footer-bar {
+      background: #0f172a;
+      padding: 6px 16px;
+      border-top: 1px solid #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #64748b;
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <div id="navbar-root"></div>
+
+  <!-- MAIN CONTAINER (COMPACT & FOCUSED) -->
+  <main class="content-area" style="padding-top: 16px;">
+
+    <!-- COMPACT TOP BAR -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+      <div>
+        <h2 style="font-size: 18px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px;">
+          <span>🖥️</span> Trung Tâm Giám Sát & Log Tự Động Hóa
+        </h2>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+          Nhật ký chi tiết các sự kiện AI sinh bài, cập nhật Google Sheet và luồng n8n thời gian thực.
+        </p>
+      </div>
+
+      <!-- QUICK TRIGGER BUTTONS (COMPACT ON TOP) -->
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn btn-sm btn-success" onclick="triggerAutomation('publish')" style="font-size: 11.5px; font-weight: 700;">
+          ▶️ Đăng Bài Tự Động
+        </button>
+        <button class="btn btn-sm" onclick="triggerAutomation('content')" style="background: #e0f2fe; color: #0284c7; border-color: #bae6fd; font-size: 11.5px; font-weight: 700;">
+          ⚡ Tạo Content Hàng Loạt
+        </button>
+        <button class="btn btn-sm btn-primary" onclick="triggerAutomation('images')" style="font-size: 11.5px; font-weight: 700;">
+          🎨 Tạo Ảnh AI
+        </button>
+        <button class="btn btn-sm" onclick="location.reload()" style="font-size: 11.5px;">
+          🔄 F5
+        </button>
+      </div>
+    </div>
+
+    <!-- ONE SINGLE SLEEK TERMINAL WINDOW -->
+    <div class="terminal-console-wrapper">
+      
+      <!-- TERMINAL TOP TOOLBAR -->
+      <div class="terminal-top-bar">
+        <!-- Status Indicator -->
+        <div class="terminal-status-indicator">
+          <span class="pulse-dot"></span>
+          <span>Live Console</span>
+          <span id="log-counter-pill" style="background:#1e293b; padding:1px 6px; border-radius:4px; font-size:10.5px; color:#cbd5e1;">0 sự kiện</span>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="terminal-filters" id="filter-group">
+          <button class="t-filter-btn active" onclick="setLogFilter('all')">Tất Cả</button>
+          <button class="t-filter-btn" onclick="setLogFilter('content')">⚡ Tạo Content</button>
+          <button class="t-filter-btn" onclick="setLogFilter('sheet')">💾 Google Sheet</button>
+          <button class="t-filter-btn" onclick="setLogFilter('publish')">🚀 Đăng Bài</button>
+          <button class="t-filter-btn" onclick="setLogFilter('error')">❌ Lỗi</button>
+        </div>
+
+        <!-- Search Input -->
+        <div>
+          <input type="text" id="terminal-search-input" class="terminal-search" placeholder="🔍 Lọc theo Dòng #, từ khóa..." oninput="filterLogs()">
+        </div>
+
+        <!-- Action Tools -->
+        <div class="terminal-actions">
+          <label style="font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 4px; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="chk-autoscroll" checked> Cuộn tự động
+          </label>
+          <button class="t-tool-btn" onclick="copyAllLogs()">📋 Sao Chép</button>
+          <button class="t-tool-btn" onclick="clearTerminalLogs()">🗑️ Xóa Log</button>
+          <button class="t-tool-btn" onclick="stopAllN8nExecutions()" style="color: #f87171; border-color: #ef4444;" title="Dừng ngay lập tức các tiến trình đang chạy trong n8n">⏹️ Dừng n8n</button>
+        </div>
+      </div>
+
+      <!-- TERMINAL OUTPUT STREAM -->
+      <div class="terminal-content-area" id="terminal-stream">
+        <div style="color: #64748b; padding: 20px; text-align: center;">
+          ⏳ Đang kết nối luồng sự kiện thời gian thực (Server-Sent Events)...
+        </div>
+      </div>
+
+      <!-- TERMINAL FOOTER STATUS BAR -->
+      <div class="terminal-footer-bar">
+        <div>
+          <span>Host n8n: <b style="color:#38bdf8;">http://localhost:5678</b></span>
+          <span style="margin: 0 8px; color:#334155;">|</span>
+          <span>Google Sheet: <b style="color:#34d399;">Content Selector</b></span>
+        </div>
+        <div>
+          <span id="last-sync-time">Sẵn sàng nhận tín hiệu</span>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script src="/public/js/common.js"></script>
+  <script>
+    renderNavbar('automation');
+
+    let rawLogList = [];
+    let activeCategory = 'all';
+
+    // 1. Kích hoạt luồng n8n
+    async function triggerAutomation(action) {
+      showToast(`⏳ Đang kích hoạt luồng "${action}"...`);
+      try {
+        const res = await fetch('/api/n8n/trigger', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`✅ Đã gửi lệnh "${action}" sang n8n thành công!`);
+        } else {
+          showToast(`⚠️ ${data.error || 'Có lỗi xảy ra'}`);
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
+    // 1.1 Dừng các tiến trình n8n đang chạy
+    async function stopAllN8nExecutions() {
+      if (!confirm('Bạn có chắc muốn hủy ngay tất cả các tiến trình n8n đang chạy ngầm?')) return;
+      showToast('🛑 Đang gửi lệnh dừng sang n8n...');
+      try {
+        const res = await fetch('/api/n8n/stop', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`🛑 ${data.message}`);
+        } else {
+          showToast(`⚠️ ${data.error || 'Có lỗi xảy ra'}`);
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
+    // 2. Phân tích log thô thành bản ghi có cấu trúc chi tiết
+    function formatLogEntry(entry) {
+      const msg = entry.message || '';
+      const level = entry.level || 'info';
+
+      // Timestamps
+      let time = entry.time || entry.timeStr;
+      if (!time && entry.timestamp) time = new Date(entry.timestamp).toLocaleTimeString('vi-VN');
+      if (!time && entry.ts) time = new Date(entry.ts).toLocaleTimeString('vi-VN');
+      if (!time) time = new Date().toLocaleTimeString('vi-VN');
+
+      // Detect Row Number
+      const rowMatch = msg.match(/Dòng\s*#?(\d+)/i) || msg.match(/dòng\s*(\d+)/i);
+      const rowNum = rowMatch ? parseInt(rowMatch[1]) : null;
+
+      let category = 'system';
+      let tagClass = 'badge-tag-content';
+      let tagText = 'HỆ THỐNG';
+      let title = msg;
+      let details = [];
+
+      // 1. TẠO CONTENT AI
+      if (msg.includes('YÊU CẦU TỰ ĐỘNG HÓA') || msg.includes('CONTENT') || msg.includes('Tạo Content') || msg.includes('gen_options')) {
+        category = 'content';
+        tagClass = 'badge-tag-content';
+        tagText = '⚡ TẠO CONTENT AI';
+        title = rowNum ? `Yêu cầu AI sinh 3 Options Content cho Dòng #${rowNum}` : 'Khởi chạy luồng tạo Content AI';
+        details = [
+          { key: 'Mục tiêu', val: rowNum ? `Dòng #${rowNum} trên Google Sheet` : 'Toàn bộ bài viết đang chờ' },
+          { key: 'Quy trình', val: 'Lưu định hướng (USP, Insight) ➔ Chuyển trạng thái "gen_options" ➔ Gửi n8n' }
+        ];
+      }
+      // 2. N8N WEBHOOK
+      else if (msg.includes('[N8N WEBHOOK]') || msg.includes('[n8n TRIGGER]') || msg.includes('n8n')) {
+        category = 'content';
+        tagClass = 'badge-tag-n8n';
+        tagText = '🤖 N8N AUTOMATION';
+        title = rowNum ? `n8n tiếp nhận lệnh tạo content cho Dòng #${rowNum}` : 'n8n đã bắt đầu xử lý luồng tự động';
+        
+        let url = msg.match(/http:\/\/[^\s]+/);
+        let endpoint = url ? url[0] : '/webhook/trigger-generate-content';
+        details = [
+          { key: 'Webhook URL', val: endpoint, highlight: true },
+          { key: 'Tiến độ', val: 'Phản hồi 200 OK · n8n đang điều phối LLM viết 3 Options' }
+        ];
+      }
+      // 3. GOOGLE SHEET
+      else if (msg.includes('GOOGLE SHEET') || msg.includes('[SHEET API]') || msg.includes('[SHEET CMS]') || msg.includes('[LƯU DỮ LIỆU]')) {
+        category = 'sheet';
+        tagClass = 'badge-tag-sheet';
+        tagText = '💾 GOOGLE SHEET';
+        title = rowNum ? `Đồng bộ dữ liệu thành công cho Dòng #${rowNum}` : 'Cập nhật cơ sở dữ liệu Google Sheet';
+        
+        let clean = msg.replace(/\[SHEET CMS\]|\[SHEET API\]|\[GOOGLE SHEET API\]|\[LƯU DỮ LIỆU\]/g, '').trim();
+        details = [
+          { key: 'Bảng tính', val: 'Content Selector · Cột A đến AC' },
+          { key: 'Chi tiết cập nhật', val: clean }
+        ];
+      }
+      // 4. BUFFER PUBLISH
+      else if (msg.includes('PUBLISH') || msg.includes('Buffer') || msg.includes('Đăng bài')) {
+        category = 'publish';
+        tagClass = 'badge-tag-publish';
+        tagText = '🚀 ĐĂNG BÀI BUFFER';
+        title = rowNum ? `Đẩy bài viết đã duyệt của Dòng #${rowNum} sang Buffer` : 'Tự động xuất bản bài viết';
+        details = [
+          { key: 'Hành động', val: 'Đã duyệt nội dung và chuyển sang hàng chờ đăng bài tự động của Buffer' }
+        ];
+      }
+      // 5. LỖI
+      else if (level === 'error' || msg.includes('Lỗi') || msg.includes('Error')) {
+        category = 'error';
+        tagClass = 'badge-tag-error';
+        tagText = '❌ LỖI HỆ THỐNG';
+        title = 'Có lỗi xảy ra trong quá trình xử lý';
+        details = [
+          { key: 'Chi tiết lỗi', val: msg, highlight: true }
+        ];
+      }
+
+      return {
+        id: entry.id || ('log_' + Math.random()),
+        time,
+        timestamp: entry.timestamp || Date.now(),
+        category,
+        tagClass,
+        tagText,
+        rowNum,
+        title,
+        details,
+        raw: msg,
+        level
+      };
+    }
+
+    // 3. Render danh sách log ra màn hình
+    function renderTerminal() {
+      const container = document.getElementById('terminal-stream');
+      const searchVal = (document.getElementById('terminal-search-input')?.value || '').toLowerCase().trim();
+
+      const filtered = rawLogList.filter(item => {
+        // Lọc theo danh mục
+        if (activeCategory !== 'all' && item.category !== activeCategory) return false;
+        // Lọc theo tìm kiếm
+        if (searchVal) {
+          const matchTitle = item.title.toLowerCase().includes(searchVal);
+          const matchRaw = item.raw.toLowerCase().includes(searchVal);
+          const matchRow = item.rowNum && String(item.rowNum).includes(searchVal.replace('#', ''));
+          if (!matchTitle && !matchRaw && !matchRow) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; color: #64748b; padding: 40px 20px;">
+            🔍 Không có log nào phù hợp với bộ lọc hiện tại.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => `
+        <div class="log-item level-${item.level}">
+          <div class="log-main-line">
+            <span class="log-time">[${item.time}]</span>
+            <span class="log-badge ${item.tagClass}">${item.tagText}</span>
+            ${item.rowNum ? `<span class="log-badge badge-tag-row">DÒNG #${item.rowNum}</span>` : ''}
+            <span class="log-title">${escapeHtml(item.title)}</span>
+            ${item.rowNum ? `<a href="/content/${item.rowNum}" class="log-link" target="_blank">🔍 Mở Dòng #${item.rowNum} ↗</a>` : ''}
+          </div>
+          ${item.details.map((d, idx, arr) => `
+            <div class="log-sub-branch">
+              <span class="branch-prefix">${idx === arr.length - 1 ? '└─' : '├─'}</span>
+              <span class="branch-key">${escapeHtml(d.key)}:</span>
+              <span class="branch-val ${d.highlight ? 'branch-highlight' : ''}">${escapeHtml(d.val)}</span>
+            </div>
+          `).join('')}
+        </div>
+      `).join('');
+
+      // Auto-scroll xuống cuối nếu được bật
+      if (document.getElementById('chk-autoscroll')?.checked) {
+        container.scrollTop = container.scrollHeight;
+      }
+
+      // Cập nhật số đếm
+      document.getElementById('log-counter-pill').innerText = `${rawLogList.length} sự kiện`;
+      document.getElementById('last-sync-time').innerText = `Cập nhật lúc: ${new Date().toLocaleTimeString('vi-VN')}`;
+    }
+
+    // 4. Lọc log
+    function setLogFilter(cat) {
+      activeCategory = cat;
+      const btns = document.querySelectorAll('#filter-group .t-filter-btn');
+      btns.forEach(b => {
+        b.classList.remove('active');
+        if (b.getAttribute('onclick')?.includes(`'${cat}'`)) b.classList.add('active');
+      });
+      renderTerminal();
+    }
+
+    function filterLogs() {
+      renderTerminal();
+    }
+
+    function clearTerminalLogs() {
+      rawLogList = [];
+      renderTerminal();
+      showToast('🗑️ Đã xóa log trên màn hình!');
+    }
+
+    function copyAllLogs() {
+      const text = rawLogList.map(e => `[${e.time}] ${e.tagText} ${e.rowNum ? `[Dòng #${e.rowNum}] ` : ''}${e.title}\n` + e.details.map(d => `   └─ ${d.key}: ${d.val}`).join('\n')).join('\n\n');
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 Đã sao chép toàn bộ log chi tiết!');
+      });
+    }
+
+    // 5. Kết nối Server-Sent Events (SSE) thời gian thực
+    function connectLiveLogs() {
+      try {
+        const es = new EventSource('/api/logs');
+        es.onmessage = (e) => {
+          try {
+            const payload = JSON.parse(e.data);
+            if (payload.type === 'history') {
+              rawLogList = (payload.data || []).map(entry => formatLogEntry(entry));
+              renderTerminal();
+            } else if (payload.type === 'log') {
+              const formatted = formatLogEntry(payload.data);
+              rawLogList.push(formatted);
+              renderTerminal();
+            }
+          } catch (_) {}
+        };
+      } catch (_) {}
+    }
+
+    connectLiveLogs();
+  </script>
+</body>
+</html>

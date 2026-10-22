@@ -1,0 +1,2968 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Lý Bài Viết Buffer — Content Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/dashboard.css">
+  <link rel="stylesheet" href="/public/css/flatpickr.min.css">
+  <style>
+    .buffer-container {
+      max-width: 1060px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Page Header */
+    .page-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-bottom: 2px;
+    }
+    .page-header-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-header-sub {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 3px;
+      font-weight: 500;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 1024px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .stat-card:hover {
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(15, 23, 42, 0.06);
+    }
+    .stat-card.active {
+      border-color: #2563eb;
+      background: #f8fafc;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+    .stat-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .stat-value {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-top: 3px;
+    }
+    .stat-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .icon-all    { background: #eff6ff; color: #2563eb; }
+    .icon-tiktok { background: #0f172a; color: #ffffff; }
+    .icon-fbpage { background: #eff6ff; color: #1d4ed8; }
+    .icon-fbgrp  { background: #ecfdf5; color: #059669; }
+
+    /* Filter Toolbar */
+    .buffer-toolbar {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .filter-select {
+      border: 1.5px solid #cbd5e1;
+      border-radius: 7px;
+      padding: 6px 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #0f172a;
+      background: #ffffff;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .filter-select:hover { border-color: #94a3b8; }
+    .filter-select:focus { border-color: #2563eb; }
+
+    /* Quick status tabs */
+    .status-tabs-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .status-tabs-list {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #ffffff;
+      padding: 5px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+    .status-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 15px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .status-tab-btn:hover {
+      color: #0f172a;
+      background: #f8fafc;
+    }
+    .status-tab-btn .tab-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #cbd5e1;
+      flex-shrink: 0;
+    }
+    .status-tab-btn.tab-queue .tab-dot { background: #38bdf8; }
+    .status-tab-btn.tab-draft .tab-dot { background: #fbbf24; }
+    .status-tab-btn.tab-sent .tab-dot { background: #4ade80; }
+    .status-tab-btn.active {
+      font-weight: 700;
+      border-color: transparent;
+      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+    }
+    .status-tab-btn.active.tab-all {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .status-tab-btn.active.tab-queue {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+    .status-tab-btn.active.tab-draft {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .status-tab-btn.active.tab-sent {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .status-tab-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 18px;
+      padding: 0 6px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .status-tab-btn.active .status-tab-count {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .status-tab-btn.active.tab-queue .status-tab-count {
+      background: #e0f2fe;
+      color: #0284c7;
+    }
+    .status-tab-btn.active.tab-draft .status-tab-count {
+      background: #fef3c7;
+      color: #d97706;
+    }
+    .status-tab-btn.active.tab-sent .status-tab-count {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .search-input-box {
+      position: relative;
+      min-width: 260px;
+    }
+    .search-input-box input {
+      width: 100%;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 7px;
+      padding: 6px 12px 6px 32px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: #0f172a;
+      background: #ffffff;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.15s;
+    }
+    .search-input-box input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+    .search-icon-svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      pointer-events: none;
+    }
+
+    /* ── COMPACT POST FEED (CARD LIST) ── */
+    .posts-feed-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .buffer-post-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 18px 22px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+      position: relative;
+    }
+    .buffer-post-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    }
+
+    /* Card Header */
+    .card-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .channel-profile-wrap {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+    .channel-avatar-box {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      position: relative;
+      flex-shrink: 0;
+      background: #f1f5f9;
+      border: 1.5px solid #e2e8f0;
+      overflow: visible;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      color: #475569;
+    }
+    .channel-avatar-img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+    }
+    .channel-platform-subbadge {
+      position: absolute;
+      bottom: -3px;
+      right: -3px;
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #ffffff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    }
+    .subbadge-tiktok { background: #000000; color: #ffffff; }
+    .subbadge-fbpage { background: #1877f2; color: #ffffff; }
+    .subbadge-fbgrp  { background: #059669; color: #ffffff; }
+
+    .channel-name-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.2px;
+    }
+
+    /* Schedule / Status Badges */
+    .card-header-badges {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .badge-queue-time {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 7px;
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      color: #0284c7;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge-queue-countdown {
+      font-size: 11px;
+      font-weight: 600;
+      color: #0369a1;
+      background: #e0f2fe;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      white-space: nowrap;
+    }
+    .badge-draft-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 7px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #b45309;
+      font-size: 11.5px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* Card Body: Text on Left, Media on Right */
+    .card-body-row {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    @media (max-width: 640px) {
+      .card-body-row {
+        flex-direction: column-reverse;
+      }
+    }
+
+    .card-text-col {
+      flex: 1;
+      min-width: 0;
+    }
+    .card-hook-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.45;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .card-hook-title:hover {
+      color: #2563eb;
+    }
+    .card-snippet-text {
+      margin-top: 6px;
+      font-size: 13.5px;
+      color: #475569;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-see-more-link {
+      color: #64748b;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      margin-left: 4px;
+    }
+    .card-see-more-link:hover {
+      color: #2563eb;
+      text-decoration: underline;
+    }
+
+    .card-meta-tags-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .card-type-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    /* Media Gallery Alongside Content */
+    .card-media-col {
+      flex-shrink: 0;
+      display: flex;
+      gap: 4px;
+      cursor: pointer;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .media-thumb-tall {
+      width: 72px;
+      height: 98px;
+      border-radius: 8px;
+      object-fit: cover;
+      display: block;
+      border: 1px solid #e2e8f0;
+      transition: transform 0.15s;
+    }
+    .media-thumb-tall:hover {
+      transform: scale(1.02);
+    }
+    .media-stack-col {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      width: 72px;
+    }
+    .media-thumb-small {
+      width: 100%;
+      height: 47px;
+      border-radius: 6px;
+      object-fit: cover;
+      display: block;
+      border: 1px solid #e2e8f0;
+      transition: transform 0.15s;
+    }
+    .media-thumb-small:hover {
+      transform: scale(1.03);
+    }
+    .media-thumb-single {
+      width: 98px;
+      height: 98px;
+      border-radius: 8px;
+      object-fit: cover;
+      display: block;
+      border: 1px solid #e2e8f0;
+    }
+    .media-thumb-video-wrap {
+      width: 130px;
+      height: 98px;
+      border-radius: 8px;
+      background: #0f172a;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #334155;
+    }
+    .media-thumb-video-poster {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.85;
+    }
+    .media-thumb-video-play {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.65);
+      border: 1.5px solid rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Card Footer: Relative Created Time + Actions */
+    .card-footer-row {
+      border-top: 1px solid #f1f5f9;
+      margin-top: 14px;
+      padding-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .card-created-time-text {
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .card-actions-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-publish-now {
+      background: #ffffff;
+      border: 1.5px solid #d1d5db;
+      color: #1f2937;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .btn-publish-now:hover {
+      background: #f8fafc;
+      border-color: #9ca3af;
+      color: #0f172a;
+    }
+    .btn-publish-now:active {
+      transform: scale(0.98);
+    }
+
+    .btn-card-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1.5px solid #d1d5db;
+      background: #ffffff;
+      color: #4b5563;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .btn-card-icon:hover {
+      background: #f8fafc;
+      border-color: #9ca3af;
+      color: #0f172a;
+    }
+    .btn-card-icon:active {
+      transform: scale(0.96);
+    }
+    .btn-card-icon.btn-danger-icon {
+      color: #dc2626;
+      border-color: #fecaca;
+    }
+    .btn-card-icon.btn-danger-icon:hover {
+      background: #fef2f2;
+      border-color: #f87171;
+      color: #b91c1c;
+    }
+
+    /* 3-Dots Dropdown */
+    .card-dropdown-wrap {
+      position: relative;
+      display: inline-block;
+    }
+    .card-dropdown-menu {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 6px);
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      box-shadow: 0 10px 20px -5px rgba(0,0,0,0.12), 0 4px 6px -2px rgba(0,0,0,0.06);
+      min-width: 175px;
+      z-index: 100;
+      padding: 5px;
+      display: none;
+    }
+    .card-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 7px 10px;
+      border: none;
+      background: none;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #334155;
+      text-align: left;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.12s;
+    }
+    .card-dropdown-item:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .card-dropdown-item.item-danger {
+      color: #dc2626;
+    }
+    .card-dropdown-item.item-danger:hover {
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+
+    /* Empty state */
+    .empty-card-state {
+      background: #ffffff;
+      border: 1px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 48px 24px;
+      text-align: center;
+      color: #64748b;
+    }
+
+    /* ── EDIT POST MODAL (EXACT BUFFER SAAS STYLE) ── */
+    .edit-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .edit-modal-box {
+      background: #ffffff;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 990px;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+    }
+    .edit-modal-header {
+      padding: 12px 20px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff;
+    }
+    .edit-modal-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .edit-modal-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.3px;
+    }
+    .btn-edit-close {
+      background: none;
+      border: none;
+      font-size: 22px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      padding: 2px 8px;
+      border-radius: 6px;
+      line-height: 1;
+    }
+    .btn-edit-close:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .edit-modal-body-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      flex: 1;
+      overflow-y: auto;
+      background: #ffffff;
+    }
+    @media (max-width: 840px) {
+      .edit-modal-body-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Left Editor Column */
+    .edit-left-pane {
+      padding: 20px;
+      border-right: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .edit-caption-textarea {
+      width: 100%;
+      min-height: 230px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 13.5px;
+      font-family: inherit;
+      color: #0f172a;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.15s;
+    }
+    .edit-caption-textarea:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+    }
+    .edit-char-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11.5px;
+      color: #64748b;
+    }
+
+    /* Media attachments strip in modal */
+    .modal-attachments-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+    .modal-media-thumbs-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .modal-attach-thumb {
+      width: 68px;
+      height: 68px;
+      border-radius: 7px;
+      border: 1.5px solid #cbd5e1;
+      object-fit: cover;
+      cursor: pointer;
+      transition: transform 0.12s;
+    }
+    .modal-attach-thumb:hover {
+      transform: scale(1.05);
+      border-color: #2563eb;
+    }
+
+    /* ── RIGHT COLUMN: BUFFER EXACT TIKTOK PHONE PREVIEW ── */
+    .edit-right-pane {
+      background: #f8fafc;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .preview-header-bar {
+      width: 100%;
+      max-width: 295px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .preview-header-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Buffer's Exact TikTok Mockup Container */
+    .buffer-tiktok-frame {
+      width: 295px;
+      height: 520px;
+      border-radius: 16px;
+      background: #000000;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25);
+      border: 2px solid #1e293b;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tiktok-media-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      background: #0b0f19;
+    }
+    .tiktok-bg-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Top Overlay: Following | For You + Search */
+    .tiktok-top-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 55px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.65) 0%, transparent 100%);
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      color: #ffffff;
+      pointer-events: none;
+    }
+    .tiktok-top-left {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #e2e8f0;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+    .tiktok-top-tabs {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.65);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+    .tiktok-top-tabs .tab-item.active {
+      color: #ffffff;
+      font-weight: 800;
+      position: relative;
+    }
+    .tiktok-top-tabs .tab-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 18px;
+      height: 2px;
+      background: #ffffff;
+      border-radius: 2px;
+    }
+    .tiktok-top-search {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.8));
+    }
+
+    /* Right Sidebar: Avatar with red +, Heart, Comment, Bookmark, Share */
+    .tiktok-right-sidebar {
+      position: absolute;
+      right: 10px;
+      bottom: 80px;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      pointer-events: none;
+    }
+    .tiktok-avatar-wrap {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1.5px solid #ffffff;
+      position: relative;
+      background: #1e293b;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    }
+    .tiktok-avatar-img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .tiktok-plus-badge {
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fe2c55;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      border: 1.5px solid #ffffff;
+    }
+
+    .tiktok-sidebar-action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.6));
+    }
+
+    /* Bottom Overlay: @channel, live caption with hashtags, sound */
+    .tiktok-bottom-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 24px 14px 14px;
+      background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 60%, transparent 100%);
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      color: #ffffff;
+      pointer-events: none;
+    }
+    .tiktok-account-name {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #ffffff;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    }
+    .tiktok-caption-text {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.95);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    }
+    .tiktok-sound-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.85);
+      margin-top: 3px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Modal Footer */
+    .edit-modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .footer-left-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .footer-right-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-move-drafts {
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      color: #475569;
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 7px 14px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-move-drafts:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+      border-color: #94a3b8;
+    }
+
+    .datetime-picker-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+    .datetime-picker-input {
+      border: 1.5px solid #cbd5e1;
+      border-radius: 7px;
+      padding: 7px 12px 7px 32px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #0f172a;
+      background: #ffffff;
+      width: 175px;
+      outline: none;
+      cursor: pointer;
+    }
+    .datetime-picker-input:focus {
+      border-color: #2563eb;
+    }
+    .datetime-picker-icon {
+      position: absolute;
+      left: 10px;
+      pointer-events: none;
+      color: #64748b;
+    }
+
+    .btn-save-green {
+      background: #22c55e;
+      border: 1.5px solid #16a34a;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 7px 20px;
+      border-radius: 7px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+      box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2);
+    }
+    .btn-save-green:hover {
+      background: #16a34a;
+      border-color: #15803d;
+      transform: translateY(-0.5px);
+      box-shadow: 0 3px 6px rgba(22, 163, 74, 0.3);
+    }
+    .btn-save-green:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Video player */
+    .video-preview-player {
+      width: 100%;
+      max-height: 280px;
+      border-radius: 8px;
+      background: #000;
+      outline: none;
+      display: block;
+    }
+
+    /* ── SIMPLE CLEAN CONFIRMATION DIALOG (SaaS Style, Non-AI) ── */
+    .custom-confirm-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100000;
+      padding: 16px;
+      animation: confirmFadeIn 0.15s ease-out;
+    }
+    @keyframes confirmFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .custom-confirm-card {
+      position: relative;
+      width: 100%;
+      max-width: 430px;
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.14), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+      padding: 22px 24px;
+      text-align: left;
+      box-sizing: border-box;
+      animation: confirmCardIn 0.15s ease-out;
+    }
+    @keyframes confirmCardIn {
+      from { opacity: 0; transform: scale(0.97) translateY(4px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .custom-confirm-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+      margin-bottom: 12px;
+    }
+    .custom-confirm-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .custom-confirm-icon.icon-danger {
+      background: #fef2f2;
+      border: 1px solid #fee2e2;
+      color: #dc2626;
+    }
+    .custom-confirm-icon.icon-publish {
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
+      color: #2563eb;
+    }
+    .custom-confirm-title {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 4px;
+      line-height: 1.35;
+    }
+    .custom-confirm-desc {
+      font-size: 13px;
+      line-height: 1.48;
+      color: #64748b;
+      margin: 0;
+    }
+    .custom-confirm-close {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.12s;
+      flex-shrink: 0;
+      margin-top: -3px;
+      margin-right: -4px;
+    }
+    .custom-confirm-close:hover {
+      background: #f1f5f9;
+      color: #334155;
+    }
+    .custom-confirm-snippet {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 18px;
+      font-size: 12.5px;
+    }
+    .snippet-channel-tag {
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 11.5px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .snippet-text {
+      color: #475569;
+      line-height: 1.45;
+      font-size: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .custom-confirm-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+    }
+    .btn-confirm-secondary {
+      padding: 7px 15px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .btn-confirm-secondary:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+      color: #0f172a;
+    }
+    .btn-confirm-primary {
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 7px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.12s;
+    }
+    .btn-confirm-danger {
+      background: #dc2626;
+      color: #ffffff;
+      border-color: #b91c1c;
+    }
+    .btn-confirm-danger:hover {
+      background: #b91c1c;
+    }
+    .btn-confirm-publish {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #1d4ed8;
+    }
+    .btn-confirm-publish:hover {
+      background: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <div id="navbar-root"></div>
+
+  <!-- MAIN CONTENT -->
+  <main class="content-area">
+    <div class="buffer-container">
+
+      <!-- 1. PAGE HEADER -->
+      <div class="page-header-row">
+        <div>
+          <div class="page-header-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            <span>Quản Lý Bài Viết Buffer</span>
+          </div>
+          <div class="page-header-sub">
+            Theo dõi, chỉnh sửa caption, lên lịch và quản lý hàng đợi xuất bản trên Buffer
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-sm" id="btn-sync-buffer" onclick="syncBufferPosts()" style="font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            <span>Đồng bộ từ Buffer</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Buffer Rate Limit / Quota Banner -->
+      <div id="buffer-quota-banner" style="display:none;margin-bottom:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:280px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div>
+            <div style="font-size:13.5px;font-weight:700;color:#92400e;" id="quota-banner-title">Hạn mức Buffer API 250 lượt/ngày đã chạm giới hạn</div>
+            <div style="font-size:12px;color:#b45309;margin-top:2px;line-height:1.5;" id="quota-banner-desc">Hệ thống đang hoạt động theo chế độ DỮ LIỆU THẬT 100% (Hàng đợi & Bản nháp hiển thị trống, tuyệt đối không dùng dữ liệu ảo).</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button onclick="checkBufferQuotaLive()" style="padding:6px 12px;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;font-size:12px;font-weight:600;color:#92400e;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Kiểm tra Quota</span>
+          </button>
+          <button onclick="openTokenModal()" style="padding:6px 14px;background:#2563eb;border:1px solid #1d4ed8;border-radius:6px;font-size:12px;font-weight:600;color:#ffffff;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Đổi Token / Nick</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. STATS CARDS -->
+      <div class="stats-grid">
+        <div class="stat-card active" id="card-filter-all" onclick="filterByChannel('all')">
+          <div>
+            <div class="stat-label">Tổng bài viết</div>
+            <div class="stat-value" id="stat-total-posts">0</div>
+          </div>
+          <div class="stat-icon icon-all">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10M7 12h10M7 17h10"/></svg>
+          </div>
+        </div>
+
+        <div class="stat-card" id="card-filter-tiktok" onclick="filterByChannel('tiktok')">
+          <div>
+            <div class="stat-label">Kênh TikTok</div>
+            <div class="stat-value" id="stat-tiktok-posts">0</div>
+          </div>
+          <div class="stat-icon icon-tiktok">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.29 0 .58.04.85.12V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.47 6.27 6.27 0 0 0 1.86-4.46V8.75a8.28 8.28 0 0 0 4.91 1.6V6.9a4.86 4.86 0 0 1-1-.21z"/></svg>
+          </div>
+        </div>
+
+        <div class="stat-card" id="card-filter-facebook_page" onclick="filterByChannel('facebook_page')">
+          <div>
+            <div class="stat-label">Facebook Page</div>
+            <div class="stat-value" id="stat-fbpage-posts">0</div>
+          </div>
+          <div class="stat-icon icon-fbpage">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </div>
+        </div>
+
+        <div class="stat-card" id="card-filter-facebook_group" onclick="filterByChannel('facebook_group')">
+          <div>
+            <div class="stat-label">Facebook Group</div>
+            <div class="stat-value" id="stat-fbgroup-posts">0</div>
+          </div>
+          <div class="stat-icon icon-fbgrp">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2b. QUICK STATUS TABS (TẤT CẢ / HÀNG ĐỢI / BẢN NHÁP / ĐÃ ĐĂNG) -->
+      <div class="status-tabs-wrapper">
+        <div class="status-tabs-list">
+          <button class="status-tab-btn tab-queue active" id="tab-status-queue" onclick="switchStatusTab('queue')">
+            <span class="tab-dot"></span>
+            <span>Hàng đợi</span>
+            <span class="status-tab-count" id="count-tab-queue">0</span>
+          </button>
+          <button class="status-tab-btn tab-draft" id="tab-status-draft" onclick="switchStatusTab('draft')">
+            <span class="tab-dot"></span>
+            <span>Bản nháp</span>
+            <span class="status-tab-count" id="count-tab-draft">0</span>
+          </button>
+          <button class="status-tab-btn tab-sent" id="tab-status-sent" onclick="switchStatusTab('sent')">
+            <span class="tab-dot"></span>
+            <span>Đã đăng</span>
+            <span class="status-tab-count" id="count-tab-sent">0</span>
+          </button>
+          <button class="status-tab-btn tab-all" id="tab-status-all" onclick="switchStatusTab('all')">
+            <span class="tab-dot"></span>
+            <span>Tất cả</span>
+            <span class="status-tab-count" id="count-tab-all">0</span>
+          </button>
+        </div>
+        <div style="font-size: 12.5px; color: var(--text-muted); font-weight: 500;">
+          Bấm vào card hoặc biểu tượng sửa để chỉnh sửa caption và đổi giờ lên lịch
+        </div>
+      </div>
+
+      <!-- 3. TOOLBAR: SEARCH & FILTERS -->
+      <div class="buffer-toolbar">
+        <div class="filter-group">
+          <!-- Kênh -->
+          <select id="select-filter-channel" class="filter-select" onchange="applyFilters()">
+            <option value="all">Tất cả kênh</option>
+            <option value="tiktok">TikTok (gaaicap2)</option>
+            <option value="facebook_page">FB Page (Gà Ai Cập Ecolar)</option>
+            <option value="facebook_group">FB Group (Test flow)</option>
+          </select>
+
+          <!-- Trạng thái -->
+          <select id="select-filter-status" class="filter-select" onchange="applyFilters()">
+            <option value="queue" selected>Hàng đợi (Queue)</option>
+            <option value="draft">Bản nháp (Drafts)</option>
+            <option value="sent">Đã đăng (Sent)</option>
+            <option value="all">Tất cả trạng thái</option>
+          </select>
+
+          <!-- Loại -->
+          <select id="select-filter-type" class="filter-select" onchange="applyFilters()">
+            <option value="all">Tất cả định dạng</option>
+            <option value="VIDEO">Video</option>
+            <option value="PHOTO_MODE">Album ảnh</option>
+          </select>
+
+          <!-- Sắp xếp -->
+          <select id="select-filter-sort" class="filter-select" onchange="applyFilters()">
+            <option value="newest">Mới nhất</option>
+            <option value="due_soon">Lịch đăng sắp tới</option>
+            <option value="oldest">Cũ nhất</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <!-- Search -->
+          <div class="search-input-box">
+            <svg class="search-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="search-posts" placeholder="Tìm theo tiêu đề, caption, ID..." oninput="applyFilters()">
+          </div>
+          <button class="btn btn-sm" onclick="loadBufferPosts(false, true)" title="Tải lại danh sách">
+            Làm mới
+          </button>
+        </div>
+      </div>
+
+      <!-- 4. COMPACT POST FEED (CARD LIST - AUTO-LOAD 5 ITEMS WITHOUT MANUAL NEXT) -->
+      <div id="buffer-posts-cards" class="posts-feed-container">
+        <div style="text-align: center; padding: 48px 20px; color: var(--text-muted); background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;">
+          <span class="spinner" style="width: 26px; height: 26px; border-width: 2.5px; margin-bottom: 10px;"></span>
+          <div style="font-weight: 600; font-size: 13.5px;">Đang tải dữ liệu bài viết Buffer...</div>
+        </div>
+      </div>
+
+      <!-- 4b. AUTO-LOAD SENTINEL (LOADS NEXT 5 POSTS PROGRESSIVELY ON SCROLL) -->
+      <div id="auto-load-sentinel"></div>
+
+    </div>
+  </main>
+
+  <!-- 5. EDIT POST MODAL (EXACT BUFFER SAAS STYLE MATCHING USER SCREENSHOT) -->
+  <div id="modal-edit-post" class="edit-modal-overlay" onclick="handleEditOverlayClick(event)">
+    <div class="edit-modal-box">
+      <!-- Modal Header -->
+      <div class="edit-modal-header">
+        <div class="edit-modal-title-group">
+          <span class="edit-modal-title">Edit Post</span>
+          <div id="edit-modal-channel-badge"></div>
+          <code id="edit-modal-post-id" style="font-size: 11px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #64748b;">--</code>
+        </div>
+        <button class="btn-edit-close" onclick="closeEditPostModal()" title="Đóng">×</button>
+      </div>
+
+      <!-- Modal Body (Two-Column Layout) -->
+      <div class="edit-modal-body-grid">
+        <!-- Left Column: Caption Textarea & Media Attachments -->
+        <div class="edit-left-pane">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.3px;">
+                Nội Dung Bài Viết (Caption)
+              </label>
+              <button onclick="copyModalCaption()" class="btn btn-sm" style="font-size: 11px; padding: 2px 8px;">
+                📋 Sao chép
+              </button>
+            </div>
+            <textarea id="edit-modal-caption" class="edit-caption-textarea" placeholder="Nhập nội dung bài viết..." oninput="handleCaptionInput()"></textarea>
+            <div class="edit-char-row">
+              <span id="edit-char-count">0 ký tự</span>
+              <span>💡 Thay đổi sẽ được cập nhật trực tiếp lên Buffer</span>
+            </div>
+          </div>
+
+          <!-- Attachments Gallery -->
+          <div>
+            <div class="modal-attachments-label" id="modal-media-heading">Media Đính Kèm</div>
+            <div id="modal-media-strip" class="modal-media-thumbs-row"></div>
+          </div>
+        </div>
+
+        <!-- Right Column: Buffer-Authentic TikTok Phone Preview -->
+        <div class="edit-right-pane">
+          <div class="preview-header-bar">
+            <span class="preview-header-title" id="preview-platform-title">
+              <span>TikTok Preview</span>
+              <span style="color: #94a3b8; font-size: 12px;" title="Mô phỏng chính xác giao diện xem trước của Buffer">ⓘ</span>
+            </span>
+            <span style="font-size: 11.5px; color: #94a3b8; font-weight: 600;">Xem trước thực tế</span>
+          </div>
+
+          <!-- Buffer-style TikTok Mobile Phone Frame -->
+          <div class="buffer-tiktok-frame">
+            <!-- Background Fullscreen Media (Photo/Video) -->
+            <div class="tiktok-media-canvas" id="tiktok-media-canvas">
+              <img id="preview-main-img" src="" class="tiktok-bg-img" alt="preview">
+            </div>
+
+            <!-- Top Overlay: Following | For You + Search -->
+            <div class="tiktok-top-overlay">
+              <div class="tiktok-top-left" id="preview-top-brand">Ecolar</div>
+              <div class="tiktok-top-tabs">
+                <span class="tab-item">Following</span>
+                <span class="tab-item active">For You</span>
+              </div>
+              <div class="tiktok-top-search">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              </div>
+            </div>
+
+            <!-- Right Sidebar: Avatar with red +, Heart, Comment, Bookmark, Share -->
+            <div class="tiktok-right-sidebar">
+              <div class="tiktok-avatar-wrap">
+                <img id="preview-avatar" src="/public/images/avatar_fallback.png" class="tiktok-avatar-img" alt="avatar">
+                <div class="tiktok-plus-badge">+</div>
+              </div>
+
+              <!-- White Heart Icon (like Buffer) -->
+              <div class="tiktok-sidebar-action">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(255,255,255,0.95)"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+              </div>
+
+              <!-- White Comment Icon -->
+              <div class="tiktok-sidebar-action">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="rgba(255,255,255,0.95)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+              </div>
+
+              <!-- White Bookmark Icon -->
+              <div class="tiktok-sidebar-action">
+                <svg width="25" height="25" viewBox="0 0 24 24" fill="rgba(255,255,255,0.95)"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+              </div>
+
+              <!-- White Share Arrow -->
+              <div class="tiktok-sidebar-action">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="rgba(255,255,255,0.95)"><path d="M14 9V3L22 12L14 21V15C7 15 2 19 2 24C2 14 7 9 14 9Z"/></svg>
+              </div>
+            </div>
+
+            <!-- Bottom Overlay: @channel, live caption, sound ticker -->
+            <div class="tiktok-bottom-overlay">
+              <div class="tiktok-account-name" id="preview-channel-name">@gaaicap2</div>
+              <div class="tiktok-caption-text" id="preview-caption-body">
+                Nội dung caption sẽ hiển thị ở đây...
+              </div>
+              <div class="tiktok-sound-bar">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                <span id="preview-sound-name">âm thanh gốc - gaaicap2</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="edit-modal-footer">
+        <div class="footer-left-group">
+          <button type="button" id="btn-toggle-draft" class="btn-move-drafts">
+            Chuyển sang Bản nháp (Move to Drafts)
+          </button>
+        </div>
+
+        <div class="footer-right-group">
+          <div class="datetime-picker-wrap" title="Chọn ngày và giờ đăng bài">
+            <svg class="datetime-picker-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <input type="text" id="edit-post-due-at" class="datetime-picker-input" placeholder="Chọn ngày giờ queue...">
+          </div>
+
+          <button type="button" id="btn-save-edit-post" class="btn-save-green" onclick="submitEditPost()">
+            <span>Lưu thay đổi</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. CUSTOM CONFIRMATION MODAL (CLEAN SAAS DIALOG FOR PUBLISH & DELETE) -->
+  <div id="custom-confirm-modal" class="custom-confirm-backdrop" style="display: none;" onclick="handleConfirmBackdropClick(event)">
+    <div class="custom-confirm-card" role="dialog" aria-modal="true">
+      <div class="custom-confirm-header">
+        <div id="confirm-icon-box" class="custom-confirm-icon icon-publish">
+          <!-- Icon injected dynamically -->
+        </div>
+        <div style="flex: 1; min-width: 0;">
+          <h3 id="confirm-dialog-title" class="custom-confirm-title">Xác nhận</h3>
+          <p id="confirm-dialog-desc" class="custom-confirm-desc">Mô tả hành động...</p>
+        </div>
+        <button type="button" class="custom-confirm-close" onclick="closeCustomConfirm(false)" title="Đóng">✕</button>
+      </div>
+
+      <!-- Preview Snippet of target post -->
+      <div id="confirm-post-snippet" class="custom-confirm-snippet">
+        <div class="snippet-channel-tag" id="confirm-snippet-channel">Kênh: gaaicap2</div>
+        <div class="snippet-text" id="confirm-snippet-text">Nội dung xem trước...</div>
+      </div>
+
+      <div class="custom-confirm-actions">
+        <button type="button" class="btn-confirm-secondary" onclick="closeCustomConfirm(false)">Hủy</button>
+        <button type="button" id="btn-confirm-proceed" class="btn-confirm-primary btn-confirm-publish" onclick="executeConfirmAction()">
+          <span id="btn-confirm-text">Xác nhận</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. MODAL ĐỔI TOKEN BUFFER (NICK MỚI KHI BỊ RATE LIMIT) -->
+  <div id="token-modal" class="custom-confirm-backdrop" style="display: none;" onclick="if(event.target === this) closeTokenModal()">
+    <div class="custom-confirm-card" style="max-width: 490px;">
+      <div class="custom-confirm-header">
+        <div class="custom-confirm-icon" style="background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div style="flex: 1; min-width: 0;">
+          <h3 class="custom-confirm-title" style="margin: 0; font-size: 16px; font-weight: 700; color: #0f172a;">Đổi Access Token Buffer (Nick mới)</h3>
+          <p class="custom-confirm-desc" style="margin: 4px 0 0; font-size: 12.5px; color: #64748b; line-height: 1.5;">Dán Access Token của tài khoản Buffer mới vào đây để hệ thống tiếp tục gọi API thật. File <code>.env</code> sẽ được tự động cập nhật.</p>
+        </div>
+        <button type="button" class="custom-confirm-close" onclick="closeTokenModal()" style="border: none; background: transparent; font-size: 16px; color: #94a3b8; cursor: pointer;">✕</button>
+      </div>
+      <div style="margin: 16px 0;">
+        <label style="display:block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px;">BUFFER_ACCESS_TOKEN MỚI:</label>
+        <textarea id="input-new-buffer-token" rows="3" placeholder="Dán mã Token Buffer mới vào đây..." style="width: 100%; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px; font-family: monospace; font-size: 12px; outline: none; box-sizing: border-box; resize: vertical;"></textarea>
+        <div style="font-size: 11.5px; color: #94a3b8; margin-top: 5px;">Mẹo: Bạn cũng có thể sửa trực tiếp <code>BUFFER_ACCESS_TOKEN</code> trong file <code>.env</code> rồi bấm "Kiểm tra Quota".</div>
+      </div>
+      <div class="custom-confirm-actions" style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" class="btn-confirm-secondary" onclick="closeTokenModal()">Hủy</button>
+        <button type="button" class="btn-confirm-primary btn-confirm-publish" id="btn-save-new-token" onclick="submitNewBufferToken()">
+          <span>Lưu & Kiểm tra</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/public/js/common.js"></script>
+  <script src="/public/js/flatpickr.min.js"></script>
+  <script src="/public/js/flatpickr-vn.js"></script>
+  <script>
+    renderNavbar('buffer');
+
+    let allPostsData = [];
+    let currentEditingPost = null;
+    let editFlatpickrInstance = null;
+    
+    // Batch loading: 5 posts at a time on scroll, no manual "Next" buttons!
+    const BATCH_SIZE = 5;
+    let visibleCount = 5;
+    let filteredPosts = [];
+
+    // Initialize Flatpickr for the Edit Modal
+    function initFlatpickr() {
+      if (typeof flatpickr !== 'undefined') {
+        const input = document.getElementById('edit-post-due-at');
+        if (input && !editFlatpickrInstance) {
+          editFlatpickrInstance = flatpickr(input, {
+            enableTime: true,
+            time_24hr: true,
+            dateFormat: "Y-m-d H:i",
+            altInput: true,
+            altFormat: "d/m/Y H:i",
+            locale: flatpickr.l10ns?.vn || 'default',
+            minDate: "today"
+          });
+        }
+      }
+    }
+
+    function isSentPost(p) {
+      const s = (p.status || '').toLowerCase();
+      if (s.includes('draft') || s.includes('queue') || s.includes('sched') || s.includes('inbox')) {
+        return false;
+      }
+      return s.includes('sent') || s.includes('publish') || s.includes('sending');
+    }
+
+    function isDraftPost(p) {
+      const s = (p.status || '').toLowerCase();
+      if (s.includes('sending') || s.includes('sent') || s.includes('publish') || s.includes('queue') || s.includes('sched')) {
+        return false;
+      }
+      return s.includes('draft') || s.includes('approval');
+    }
+
+    function isQueuePost(p) {
+      const s = (p.status || '').toLowerCase();
+      return s.includes('queue') || s.includes('sched');
+    }
+
+    // Bài đã đăng chỉ hiện khi đã có link FB/TikTok (tránh loãng danh sách).
+    // Ngoại lệ: bài quá 2h vẫn chưa có link (vd post Group dạng notification không bao giờ
+    // có link) thì vẫn hiện để khỏi mất dấu, kèm ghi chú "chưa có link".
+    function hasLiveUrl(p) {
+      return Boolean(((p.live_post_url || p.external_url || p.externalLink) || '').trim());
+    }
+    function isOldSent(p) {
+      if (!isSentPost(p) || hasLiveUrl(p)) return false;
+      const t = new Date(p.sent_at || p.created_at || p.updated_at || 0).getTime();
+      return Boolean(t) && (Date.now() - t) > 2 * 60 * 60 * 1000;
+    }
+    function isVisiblePost(p) {
+      return !isSentPost(p) || hasLiveUrl(p) || isOldSent(p);
+    }
+
+    // Tự lấp link thiếu 1 lần mỗi khi mở tab (1 request gộp duy nhất, silent)
+    let linksRefreshed = false;
+    async function refreshMissingLinks() {
+      if (linksRefreshed) return;
+      linksRefreshed = true;
+      try {
+        const res = await fetch('/api/buffer/refresh-links', { method: 'POST' });
+        const data = await res.json();
+        if (data && data.success && data.filled > 0) {
+          await loadBufferPosts(true);
+        }
+      } catch (_) {}
+    }
+
+    function switchStatusTab(status) {
+      const tabs = ['all', 'queue', 'draft', 'sent'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-status-${t}`);
+        if (btn) btn.classList.toggle('active', t === status);
+      });
+      const sel = document.getElementById('select-filter-status');
+      if (sel) sel.value = status;
+      applyFilters(true);
+    }
+
+    let currentBufferQuota = null;
+
+    function formatSecondsToHms(totalSeconds) {
+      if (!totalSeconds || isNaN(totalSeconds) || totalSeconds <= 0) return 'sớm';
+      const hours = Math.floor(totalSeconds / 3600);
+      const mins = Math.floor((totalSeconds % 3600) / 60);
+      if (hours > 0) return `~${hours} giờ ${mins > 0 ? mins + ' phút' : ''}`;
+      return `~${mins} phút`;
+    }
+
+    function updateQuotaBanner(quota) {
+      currentBufferQuota = quota || null;
+      const banner = document.getElementById('buffer-quota-banner');
+      if (!banner) return;
+
+      if (quota && quota.isRateLimited) {
+        banner.style.display = 'flex';
+        const titleEl = document.getElementById('quota-banner-title');
+        const descEl = document.getElementById('quota-banner-desc');
+        const resetText = formatSecondsToHms(quota.resetInSeconds);
+
+        if (titleEl) {
+          titleEl.innerHTML = `⚠️ Hạn mức Buffer API 250 lượt/ngày đã chạm giới hạn (${quota.remaining ?? 0}/${quota.limit || 250} lượt)`;
+        }
+        if (descEl) {
+          descEl.innerHTML = `Hệ thống hoạt động theo nguyên tắc <strong>DỮ LIỆU THẬT 100%</strong> (Hàng đợi & Bản nháp hiển thị trống, tuyệt đối không dùng data ảo). Tự động mở lại sau: <strong>${resetText}</strong>. Bài đã đăng (Sent) vẫn được nạp trực tiếp từ Google Sheet.`;
+        }
+      } else {
+        banner.style.display = 'none';
+      }
+    }
+
+    async function checkBufferQuotaLive() {
+      showToast("🔍 Đang kiểm tra hạn mức Buffer API...");
+      try {
+        const res = await fetch('/api/buffer/quota');
+        const data = await res.json();
+        if (data.quota) {
+          updateQuotaBanner(data.quota);
+          if (data.quota.isRateLimited) {
+            showToast(`⚠️ Token hiện tại đã hết hạn mức (0/${data.quota.limit} lượt, reset sau ${formatSecondsToHms(data.quota.resetInSeconds)})`);
+          } else {
+            showToast(`✅ Token Buffer hoạt động tốt! Còn lại ${data.quota.remaining}/${data.quota.limit} lượt`);
+            await loadBufferPosts(false, true);
+          }
+        }
+      } catch (err) {
+        showToast("❌ Lỗi kiểm tra Quota: " + err.message, "error");
+      }
+    }
+
+    function openTokenModal() {
+      const modal = document.getElementById('token-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+        const input = document.getElementById('input-new-buffer-token');
+        if (input) {
+          input.value = '';
+          input.focus();
+        }
+      }
+    }
+
+    function closeTokenModal() {
+      const modal = document.getElementById('token-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function submitNewBufferToken() {
+      const input = document.getElementById('input-new-buffer-token');
+      const token = (input?.value || '').trim();
+      if (!token) {
+        showToast('⚠️ Vui lòng dán Access Token Buffer vào ô');
+        return;
+      }
+
+      const btn = document.getElementById('btn-save-new-token');
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner-mini" style="width:13px;height:13px;"></span> Đang lưu & kiểm tra...`;
+
+      try {
+        const res = await fetch('/api/buffer/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`🎉 ${data.message}`, 'success');
+          closeTokenModal();
+          updateQuotaBanner(data.quota);
+          await loadBufferPosts(false, true);
+        } else {
+          showToast(`⚠️ ${data.error || 'Không thể cập nhật token'}`, 'warning');
+        }
+      } catch (err) {
+        showToast('❌ Lỗi: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Lưu & Kiểm tra</span>`;
+      }
+    }
+
+    // fresh=true: thêm &force=true để backend bỏ qua cache 60s của BufferService
+    // (dùng cho F5/tải lại/sau thao tác của user). Polling ngầm giữ fresh=false
+    // để không đốt quota Buffer 250 lượt/ngày.
+    async function loadBufferPosts(isSilent = false, fresh = false) {
+      const container = document.getElementById('buffer-posts-cards');
+      if (!isSilent && container) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 48px 20px; color: var(--text-muted); background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;">
+            <span class="spinner" style="width: 26px; height: 26px; border-width: 2.5px; margin-bottom: 10px;"></span>
+            <div style="font-weight: 600; font-size: 13.5px;">Đang tải dữ liệu bài viết Buffer & Sheet...</div>
+          </div>
+        `;
+      }
+
+      try {
+        const res = await fetch('/api/posts?limit=1000' + (fresh ? '&force=true' : ''));
+        const data = await res.json();
+        allPostsData = (data.posts || []).filter(isVisiblePost);
+        if (data.quota) {
+          updateQuotaBanner(data.quota);
+        }
+        updateStatsCounters(allPostsData);
+        applyFilters(false);
+        refreshMissingLinks();
+      } catch (err) {
+        if (!isSilent && container) {
+          container.innerHTML = `
+            <div class="empty-card-state" style="color: var(--danger);">
+              ❌ Lỗi tải bài viết: ${escapeHtml(err.message)}
+            </div>
+          `;
+        }
+      }
+    }
+
+    async function syncBufferPosts() {
+      const btn = document.getElementById('btn-sync-buffer');
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner-mini" style="width:13px;height:13px;"></span> Đang đồng bộ...`;
+
+      try {
+        const res = await fetch('/api/buffer/sync', { method: 'POST' });
+        const data = await res.json();
+        if (data.quota) {
+          updateQuotaBanner(data.quota);
+        }
+        if (data.success) {
+          showToast(`🎉 ${data.message || 'Đã đồng bộ thành công bài viết từ Buffer!'}`, 'success');
+          if (data.posts && Array.isArray(data.posts)) {
+            allPostsData = data.posts.filter(isVisiblePost);
+            updateStatsCounters(allPostsData);
+            applyFilters(false);
+          } else {
+            await loadBufferPosts(false);
+          }
+        } else {
+          showToast(`⚠️ ${data.error || 'Có lỗi khi đồng bộ'}`, 'warning');
+          if (data.quota?.isRateLimited) {
+            updateQuotaBanner(data.quota);
+          }
+        }
+      } catch (err) {
+        showToast('❌ Lỗi: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          <span>Đồng bộ từ Buffer</span>
+        `;
+      }
+    }
+
+    function updateStatsCounters(posts) {
+      const total = posts.length;
+      const tiktok = posts.filter(p => (p.platform || '').includes('tiktok')).length;
+      const fbpage = posts.filter(p => (p.platform || '') === 'facebook_page' || ((p.platform || '').includes('facebook') && !(p.platform || '').includes('group'))).length;
+      const fbgroup = posts.filter(p => (p.platform || '').includes('group')).length;
+
+      document.getElementById('stat-total-posts').innerText = total;
+      document.getElementById('stat-tiktok-posts').innerText = tiktok;
+      document.getElementById('stat-fbpage-posts').innerText = fbpage;
+      document.getElementById('stat-fbgroup-posts').innerText = fbgroup;
+
+      const queueCount = posts.filter(p => isQueuePost(p)).length;
+      const draftCount = posts.filter(p => isDraftPost(p)).length;
+      const sentCount = posts.filter(p => isSentPost(p)).length;
+
+      const cAll = document.getElementById('count-tab-all');
+      if (cAll) cAll.innerText = total;
+      const cQueue = document.getElementById('count-tab-queue');
+      if (cQueue) cQueue.innerText = queueCount;
+      const cDraft = document.getElementById('count-tab-draft');
+      if (cDraft) cDraft.innerText = draftCount;
+      const cSent = document.getElementById('count-tab-sent');
+      if (cSent) cSent.innerText = sentCount;
+    }
+
+    function filterByChannel(channel) {
+      document.getElementById('select-filter-channel').value = channel;
+      ['all', 'tiktok', 'facebook_page', 'facebook_group'].forEach(ch => {
+        const el = document.getElementById(`card-filter-${ch}`);
+        if (el) el.classList.toggle('active', ch === channel);
+      });
+      applyFilters(true);
+    }
+
+    function applyFilters(resetBatch = true) {
+      if (resetBatch) visibleCount = BATCH_SIZE;
+
+      const channelVal = document.getElementById('select-filter-channel').value;
+      const statusVal = document.getElementById('select-filter-status').value;
+      const typeVal = document.getElementById('select-filter-type').value;
+      const searchVal = (document.getElementById('search-posts').value || '').trim().toLowerCase();
+
+      ['all', 'queue', 'draft', 'sent'].forEach(t => {
+        const btn = document.getElementById(`tab-status-${t}`);
+        if (btn) btn.classList.toggle('active', t === statusVal);
+      });
+
+      ['all', 'tiktok', 'facebook_page', 'facebook_group'].forEach(ch => {
+        const el = document.getElementById(`card-filter-${ch}`);
+        if (el) el.classList.toggle('active', ch === channelVal);
+      });
+
+      filteredPosts = allPostsData.filter(p => {
+        if (channelVal !== 'all') {
+          if (channelVal === 'tiktok' && !(p.platform || '').includes('tiktok')) return false;
+          if (channelVal === 'facebook_group' && !(p.platform || '').includes('group')) return false;
+          if (channelVal === 'facebook_page') {
+            if ((p.platform || '').includes('tiktok') || (p.platform || '').includes('group')) return false;
+          }
+        }
+
+        if (statusVal === 'draft' && !isDraftPost(p)) return false;
+        if (statusVal === 'queue' && !isQueuePost(p)) return false;
+        if (statusVal === 'sent' && !isSentPost(p)) return false;
+
+        if (typeVal !== 'all') {
+          if (p.type !== typeVal) return false;
+        }
+
+        if (searchVal) {
+          const matchTitle = (p.title || '').toLowerCase().includes(searchVal);
+          const matchCaption = (p.caption || p.text || '').toLowerCase().includes(searchVal);
+          const matchId = (p.post_id || p.id || '').toLowerCase().includes(searchVal);
+          if (!matchTitle && !matchCaption && !matchId) return false;
+        }
+
+        return true;
+      });
+
+      // Sắp xếp bài viết
+      const sortVal = document.getElementById('select-filter-sort')?.value || 'newest';
+      filteredPosts.sort((a, b) => {
+        if (sortVal === 'due_soon') {
+          const timeA = a.due_at ? new Date(a.due_at).getTime() : Infinity;
+          const timeB = b.due_at ? new Date(b.due_at).getTime() : Infinity;
+          if (timeA !== timeB) return timeA - timeB;
+          return new Date(b.created_at || b.updated_at || 0) - new Date(a.created_at || a.updated_at || 0);
+        } else if (sortVal === 'oldest') {
+          const timeA = new Date(a.sent_at || a.created_at || a.updated_at || 0).getTime();
+          const timeB = new Date(b.sent_at || b.created_at || b.updated_at || 0).getTime();
+          return timeA - timeB;
+        } else {
+          // 'newest' (Mới nhất)
+          const timeA = new Date(a.sent_at || a.created_at || a.updated_at || 0).getTime();
+          const timeB = new Date(b.sent_at || b.created_at || b.updated_at || 0).getTime();
+          return timeB - timeA;
+        }
+      });
+
+      renderCurrentPage();
+    }
+
+    function renderCurrentPage() {
+      const pageItems = filteredPosts.slice(0, visibleCount);
+      renderPostsCards(pageItems);
+      updateAutoLoadSentinel();
+    }
+
+    function updateAutoLoadSentinel() {
+      const sentinel = document.getElementById('auto-load-sentinel');
+      if (!sentinel) return;
+
+      if (filteredPosts.length === 0) {
+        sentinel.innerHTML = '';
+        return;
+      }
+
+      if (visibleCount < filteredPosts.length) {
+        sentinel.innerHTML = `
+          <div style="text-align: center; padding: 18px 12px; color: #64748b; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span class="spinner-mini" style="width: 14px; height: 14px;"></span>
+            <span>Đang hiển thị ${Math.min(visibleCount, filteredPosts.length)} / ${filteredPosts.length} bài viết (cuộn để tải thêm)...</span>
+          </div>
+        `;
+      } else if (filteredPosts.length > BATCH_SIZE) {
+        sentinel.innerHTML = `
+          <div style="text-align: center; padding: 16px; color: #94a3b8; font-size: 12.5px; font-weight: 500;">
+            ✓ Đã hiển thị toàn bộ ${filteredPosts.length} bài viết
+          </div>
+        `;
+      } else {
+        sentinel.innerHTML = '';
+      }
+    }
+
+    // Auto-load next 5 on scroll (IntersectionObserver)
+    let autoLoadObserver = null;
+    function initAutoLoadObserver() {
+      if (autoLoadObserver) autoLoadObserver.disconnect();
+      const sentinel = document.getElementById('auto-load-sentinel');
+      if (!sentinel) return;
+
+      autoLoadObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          if (visibleCount < filteredPosts.length) {
+            visibleCount += BATCH_SIZE;
+            renderCurrentPage();
+          }
+        }
+      }, { rootMargin: '200px' });
+
+      autoLoadObserver.observe(sentinel);
+    }
+
+    function getRelativeCountdown(iso) {
+      if (!iso) return '';
+      try {
+        const target = new Date(iso).getTime();
+        if (isNaN(target)) return '';
+        const now = Date.now();
+        const diffMs = target - now;
+        if (diffMs <= 0) {
+          const pastMins = Math.floor(Math.abs(diffMs) / 60000);
+          if (pastMins < 60) return `Đã quá ${pastMins} phút`;
+          const pastHours = Math.floor(pastMins / 60);
+          return `Đã quá ${pastHours} giờ`;
+        }
+        const mins = Math.floor(diffMs / 60000);
+        const hours = Math.floor(mins / 60);
+        const days = Math.floor(hours / 24);
+        const remHours = hours % 24;
+        const remMins = mins % 60;
+
+        if (days > 0) {
+          return `Còn ${days} ngày ${remHours > 0 ? remHours + 'g' : ''}`;
+        }
+        if (hours > 0) {
+          return `Còn ${hours} giờ ${remMins > 0 ? remMins + 'p' : ''}`;
+        }
+        return `Còn ${mins} phút`;
+      } catch (_) {
+        return '';
+      }
+    }
+
+    // Vietnamese relative creation time formatter
+    function getRelativeCreatedTime(iso) {
+      if (!iso) return 'Vừa tạo xong';
+      try {
+        const created = new Date(iso).getTime();
+        if (isNaN(created)) return 'Vừa tạo xong';
+        const diffMs = Date.now() - created;
+        if (diffMs < 0) return 'Vừa tạo xong';
+        const mins = Math.floor(diffMs / 60000);
+        if (mins < 1) return 'Vừa tạo xong';
+        if (mins === 1) return 'Đã tạo cách đây 1 phút';
+        if (mins < 60) return `Đã tạo cách đây ${mins} phút`;
+        const hours = Math.floor(mins / 60);
+        if (hours === 1) return 'Đã tạo cách đây 1 giờ';
+        if (hours < 24) return `Đã tạo cách đây ${hours} giờ`;
+        const days = Math.floor(hours / 24);
+        if (days === 1) return 'Đã tạo hôm qua';
+        return `Đã tạo cách đây ${days} ngày`;
+      } catch (_) {
+        return 'Gần đây';
+      }
+    }
+
+    function formatDateTime(iso) {
+      try {
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return '--';
+        return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' +
+               d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      } catch (_) {
+        return iso;
+      }
+    }
+
+    function extractHookAndSnippet(caption, title) {
+      if (!caption) return { hook: title || 'Bài viết mới', snippet: '' };
+      const lines = caption.split('\n').map(l => l.trim()).filter(Boolean);
+      if (lines.length === 0) return { hook: title || 'Bài viết mới', snippet: '' };
+      let hook = lines[0];
+      let snippet = lines.slice(1).join(' ');
+      if (!snippet && title && title !== hook) {
+        snippet = hook;
+        hook = title;
+      }
+      return { hook, snippet };
+    }
+
+    function resolveMediaUrl(url) {
+      if (!url) return '';
+      if (url.includes('/tmp/')) {
+        const idx = url.indexOf('/tmp/');
+        return url.slice(idx);
+      }
+      return url;
+    }
+
+    function getChannelMeta(p) {
+      const platform = (p.platform || '').toLowerCase();
+      let name = p.channel_name || 'gaaicap2';
+      let subbadgeClass = 'subbadge-tiktok';
+      let subbadgeSvg = `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.29 0 .58.04.85.12V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.47 6.27 6.27 0 0 0 1.86-4.46V8.75a8.28 8.28 0 0 0 4.91 1.6V6.9a4.86 4.86 0 0 1-1-.21z"/></svg>`;
+      let channelLabel = 'TikTok';
+
+      const chName = (p.channel_name || '').toLowerCase();
+      const extUrl = (p.external_url || p.live_post_url || '').toLowerCase();
+      const chId = (p.channel_id || p.metadata?.channel_id || '').toLowerCase();
+
+      if (platform.includes('group') || chName.includes('group') || chName.includes('test flow')) {
+        subbadgeClass = 'subbadge-fbgrp';
+        subbadgeSvg = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`;
+        channelLabel = 'FB Group';
+        if (!p.channel_name) name = 'Test flow';
+      } else if (
+        platform.includes('facebook') ||
+        platform === 'facebook_page' ||
+        chName.includes('haha hihi') ||
+        extUrl.includes('facebook.com') ||
+        chId === '6a9f61cccd8b9c702c285883' ||
+        chId === '6a923468ccaf649a673949ef'
+      ) {
+        subbadgeClass = 'subbadge-fbpage';
+        subbadgeSvg = `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>`;
+        channelLabel = 'Facebook Page';
+        if (!p.channel_name) name = 'Haha hihi';
+      }
+
+      let avatarUrl = '';
+      if (p.assets && p.assets.length > 0) {
+        avatarUrl = resolveMediaUrl(p.assets[0].thumbnail || p.assets[0].source || '');
+      }
+
+      return { name, subbadgeClass, subbadgeSvg, channelLabel, avatarUrl };
+    }
+
+    function renderMediaGallery(p) {
+      const assets = p.assets || [];
+      const hasMultipleAssets = assets.length > 1;
+      const hasVideoFile = assets.some(a => (a.source || a.thumbnail || '').match(/\.(mp4|mov|webm)$/i));
+      const isVideo = !hasMultipleAssets && (hasVideoFile || (p.type === 'VIDEO' && !assets.some(a => (a.source || a.thumbnail || '').match(/\.(jpg|jpeg|png|webp)$/i))));
+
+      if (isVideo) {
+        const videoAsset = assets.find(a => (a.source || '').match(/\.(mp4|mov|webm)$/i) || (a.source || '').includes('video')) || assets[0] || {};
+        const poster = resolveMediaUrl(videoAsset.thumbnail || videoAsset.source || '');
+        return `
+          <div class="media-thumb-video-wrap">
+            ${poster ? `<img src="${poster}" class="media-thumb-video-poster" alt="Video thumbnail">` : ''}
+            <div class="media-thumb-video-play">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+        `;
+      }
+
+      if (assets.length === 0) {
+        return '';
+      }
+
+      if (assets.length === 1) {
+        const src = resolveMediaUrl(assets[0].thumbnail || assets[0].source || assets[0].url || '');
+        return `<img src="${src}" class="media-thumb-single" alt="Thumbnail" loading="lazy">`;
+      }
+
+      if (assets.length === 2) {
+        const src0 = resolveMediaUrl(assets[0].thumbnail || assets[0].source || '');
+        const src1 = resolveMediaUrl(assets[1].thumbnail || assets[1].source || '');
+        return `
+          <img src="${src0}" class="media-thumb-tall" style="width: 72px;" alt="Image 1" loading="lazy">
+          <img src="${src1}" class="media-thumb-tall" style="width: 72px;" alt="Image 2" loading="lazy">
+        `;
+      }
+
+      // 3 or more photos: 1 tall on left + 2 stacked on right
+      const src0 = resolveMediaUrl(assets[0].thumbnail || assets[0].source || '');
+      const src1 = resolveMediaUrl(assets[1].thumbnail || assets[1].source || '');
+      const src2 = resolveMediaUrl(assets[2].thumbnail || assets[2].source || '');
+
+      return `
+        <img src="${src0}" class="media-thumb-tall" alt="Photo 1" loading="lazy">
+        <div class="media-stack-col">
+          <img src="${src1}" class="media-thumb-small" alt="Photo 2" loading="lazy">
+          <img src="${src2}" class="media-thumb-small" alt="Photo 3" loading="lazy">
+        </div>
+      `;
+    }
+
+    function renderPostsCards(posts) {
+      const container = document.getElementById('buffer-posts-cards');
+      if (posts.length === 0) {
+        const statusVal = document.getElementById('select-filter-status')?.value || 'all';
+        const isRateLimited = Boolean(currentBufferQuota?.isRateLimited);
+
+        let emptyTitle = 'Không tìm thấy bài viết nào';
+        let emptyDesc = 'Thử điều chỉnh bộ lọc hoặc nhấn "Đồng bộ từ Buffer" để tải dữ liệu mới nhất.';
+
+        if ((statusVal === 'queue' || statusVal === 'draft') && isRateLimited) {
+          emptyTitle = 'Hàng đợi / Bản nháp đang hiển thị trống (Dữ liệu thật 100%)';
+          emptyDesc = '⚠️ Buffer API đang đạt giới hạn 250 lượt/ngày. Hệ thống tuân thủ nguyên tắc <strong>DỮ LIỆU THẬT</strong>, tuyệt đối không dùng dữ liệu ảo cục bộ. Vui lòng đổi Token/nick mới trong file <code>.env</code> hoặc bấm nút <strong>"Đổi Token / Nick"</strong> phía trên.';
+        } else if (statusVal === 'sent') {
+          emptyTitle = 'Chưa có bài viết đã đăng nào';
+          emptyDesc = 'Danh sách được đồng bộ trực tiếp từ Google Sheet (Cột live_post_url & status: posted).';
+        }
+
+        container.innerHTML = `
+          <div class="empty-card-state" style="padding: 38px 24px; text-align: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;">
+            <div style="font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">${emptyTitle}</div>
+            <div style="font-size: 13px; color: #64748b; max-width: 580px; margin: 0 auto; line-height: 1.6;">${emptyDesc}</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = posts.map(p => {
+        const { name, subbadgeClass, subbadgeSvg, avatarUrl } = getChannelMeta(p);
+        const isQueued = isQueuePost(p);
+        const isSent = isSentPost(p);
+        const { hook, snippet } = extractHookAndSnippet(p.caption || p.text, p.title);
+        const relativeCreated = getRelativeCreatedTime(p.created_at);
+        const liveUrl = p.external_url || p.live_post_url || p.externalLink || p.buffer_url || '';
+        // Link mạng xã hội THẬT (FB/TikTok). Bài đã đăng nhưng chưa có link này thì
+        // tuyệt đối không fallback sang link tab Buffer (gây hiểu nhầm sang tab draft).
+        const liveSocialUrl = p.external_url || p.live_post_url || p.externalLink || '';
+
+        // Schedule / Status badge
+        let badgeHtml = '';
+        if (isSent) {
+          if (p.status === 'sending' || p.status === 'publishing') {
+            badgeHtml = `
+              <div class="badge-sending-pill" style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;background:#e0f2fe;color:#0369a1;border-radius:20px;font-size:11.5px;font-weight:700;border:1px solid #bae6fd;">
+                <span class="spinner-mini" style="width:12px;height:12px;border-width:2px;border-color:#0284c7;border-top-color:transparent;" role="status"></span> Đang xuất bản...
+              </div>
+            `;
+          } else {
+            const sentTime = p.sent_at ? formatDateTime(p.sent_at) : (p.updated_at ? formatDateTime(p.updated_at) : '');
+            badgeHtml = `
+              <div class="badge-sent-pill" style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:#dcfce7;color:#166534;border-radius:20px;font-size:11.5px;font-weight:700;border:1px solid #bbf7d0;">
+                Đã đăng ${sentTime ? `(${sentTime})` : ''}
+              </div>
+            `;
+          }
+        } else if (isQueued) {
+          if (p.due_at) {
+            badgeHtml = `
+              <div class="badge-queue-time" title="Lịch tự động đăng Buffer">
+                ${formatDateTime(p.due_at)}
+              </div>
+              <div class="badge-queue-countdown">${getRelativeCountdown(p.due_at)}</div>
+            `;
+          } else {
+            badgeHtml = `
+              <div class="badge-queue-pill" style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:#fef3c7;color:#92400e;border-radius:20px;font-size:11.5px;font-weight:700;border:1px solid #fde68a;">
+                Hàng đợi (Queue)
+              </div>
+            `;
+          }
+        } else {
+          badgeHtml = `
+            <div class="badge-draft-pill">
+              Bản nháp (Draft)
+            </div>
+          `;
+        }
+
+        const assetsCount = p.assets?.length || 0;
+        const hasMultipleAssets = assetsCount > 1;
+        const hasVideoFile = (p.assets || []).some(a => (a.source || a.thumbnail || '').match(/\.(mp4|mov|webm)$/i));
+        const isVideo = !hasMultipleAssets && (hasVideoFile || (p.type === 'VIDEO' && !(p.assets || []).some(a => (a.source || a.thumbnail || '').match(/\.(jpg|jpeg|png|webp)$/i))));
+        const typeTagHtml = isVideo ? `Video` : (assetsCount > 0 ? `Album (${assetsCount})` : `Bài viết`);
+
+        const mediaGalleryHtml = renderMediaGallery(p);
+
+        const avatarImgTag = avatarUrl
+          ? `<img src="${avatarUrl}" class="channel-avatar-img" alt="${escapeHtml(name)}" onerror="this.style.display='none';">`
+          : name.slice(0, 2).toUpperCase();
+
+        return `
+          <div class="buffer-post-card" id="post-card-${p.id}">
+            <!-- Header: Channel + Platform Badge + Due Date / Status -->
+            <div class="card-header-row">
+              <div class="channel-profile-wrap">
+                <div class="channel-avatar-box">
+                  ${avatarImgTag}
+                  <span class="channel-platform-subbadge ${subbadgeClass}">
+                    ${subbadgeSvg}
+                  </span>
+                </div>
+                <div class="channel-name-title">${escapeHtml(name)}</div>
+              </div>
+
+              <div class="card-header-badges">
+                ${badgeHtml}
+              </div>
+            </div>
+
+            <!-- Body: Content (Left) & Media Gallery (Right) -->
+            <div class="card-body-row">
+              <div class="card-text-col">
+                <div class="card-hook-title" ${isSent ? (liveSocialUrl ? `onclick="window.open('${liveSocialUrl}', '_blank')"` : '') : `onclick="openEditPostModal('${p.id}')"`} ${isSent ? (liveSocialUrl ? 'title="Nhấp để xem bài viết thực tế"' : '') : 'title="Nhấp để chỉnh sửa bài viết"'}>
+                  ${escapeHtml(hook)}
+                </div>
+                <div class="card-snippet-text">
+                  ${escapeHtml(snippet)}
+                  ${isSent ? (liveSocialUrl ? `<a href="${liveSocialUrl}" target="_blank" class="card-see-more-link" style="text-decoration:none;">xem bài ↗</a>` : '') : `<span class="card-see-more-link" onclick="openEditPostModal('${p.id}')">see more</span>`}
+                </div>
+                <div class="card-meta-tags-row">
+                  <span class="card-type-tag">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                    ${typeTagHtml}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Media Column alongside text -->
+              <div class="card-media-col" ${isSent ? (liveSocialUrl ? `onclick="window.open('${liveSocialUrl}', '_blank')"` : '') : `onclick="openEditPostModal('${p.id}')"`} ${isSent ? (liveSocialUrl ? 'title="Bấm để xem bài viết thực tế trên mạng xã hội"' : '') : 'title="Bấm để xem & chỉnh sửa bài viết"'}>
+                ${mediaGalleryHtml}
+              </div>
+            </div>
+
+            <!-- Footer: Created relative time (Tiếng Việt) + Action buttons -->
+            <div class="card-footer-row">
+              <div class="card-created-time-text">
+                ${relativeCreated}
+              </div>
+
+              <div class="card-actions-group">
+                ${isSent ? `
+                  ${(p.status === 'sending' || p.status === 'publishing') ? `
+                    <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#0284c7;font-weight:700;">
+                      <span class="spinner-mini" style="width:12px;height:12px;border-width:2px;border-color:#0284c7;border-top-color:transparent;"></span> Đang xử lý...
+                    </span>
+                  ` : (liveSocialUrl ? `
+                    <a href="${liveSocialUrl}" target="_blank" class="btn-live-link" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:7px;font-size:12.5px;font-weight:700;text-decoration:none;" title="Xem bài viết trực tiếp trên mạng xã hội">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                      <span>Xem bài viết</span>
+                    </a>
+                  ` : `
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#166534;font-weight:700;" title="Bài đã đăng nhưng chưa đồng bộ được link FB/TikTok">Đã xuất bản · chưa có link</span>
+                    ${p.buffer_url ? `<a href="${p.buffer_url}" target="_blank" style="display:inline-flex;align-items:center;font-size:11.5px;color:#64748b;font-weight:600;" title="Mở kênh trên Buffer">Buffer ↗</a>` : ''}
+                  `)}
+
+                  <!-- Nút Xóa trực tiếp cho bài đã đăng (đã đăng thì không cần sửa, chỉ có xóa) -->
+                  <button class="btn-card-icon btn-danger-icon" onclick="handleDeletePost('${p.id}', event)" title="Xóa bài viết">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                ` : `
+                  <!-- Đăng ngay (Publish Now) button -->
+                  <button class="btn-publish-now" onclick="handlePublishNow('${p.id}', event)" title="Đăng bài ngay lập tức lên kênh">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    <span>Đăng ngay</span>
+                  </button>
+
+                  <!-- Edit icon button (chỉ hiển thị khi chưa đăng) -->
+                  <button class="btn-card-icon" onclick="openEditPostModal('${p.id}')" title="Chỉnh sửa bài viết & đổi giờ lên lịch">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                `}
+
+                <!-- 3-Dots dropdown button -->
+                <div class="card-dropdown-wrap">
+                  <button class="btn-card-icon" onclick="toggleCardDropdown('${p.id}', event)" title="Tùy chọn khác">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+                  </button>
+                  <div class="card-dropdown-menu" id="dropdown-menu-${p.id}">
+                    ${!isSent ? `
+                    <button class="card-dropdown-item item-danger" onclick="handleDeletePost('${p.id}', event)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      <span>Xóa</span>
+                    </button>
+                    ` : ''}
+                    <button class="card-dropdown-item" onclick="handleCopyPostId('${p.id}', event)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                      <span>Copy Buffer ID</span>
+                    </button>
+                    <button class="card-dropdown-item" onclick="handleCopyCaption('${p.id}', event)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                      <span>Sao chép Caption</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /* ── DROPDOWN HANDLERS ── */
+    function toggleCardDropdown(postId, event) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      const menu = document.getElementById(`dropdown-menu-${postId}`);
+      if (!menu) return;
+      const isVisible = menu.style.display === 'block';
+      closeAllDropdowns();
+      if (!isVisible) {
+        menu.style.display = 'block';
+      }
+    }
+
+    function closeAllDropdowns() {
+      document.querySelectorAll('.card-dropdown-menu').forEach(el => {
+        el.style.display = 'none';
+      });
+    }
+
+    document.addEventListener('click', () => {
+      closeAllDropdowns();
+    });
+
+    /* ── CUSTOM CONFIRM MODAL CONTROLLERS ── */
+    let currentConfirmResolve = null;
+
+    function showConfirmDialog({ type = 'publish', title = 'Xác nhận', desc = '', confirmText = 'Đồng ý', post = null }) {
+      return new Promise((resolve) => {
+        currentConfirmResolve = resolve;
+        const modal = document.getElementById('custom-confirm-modal');
+        const titleEl = document.getElementById('confirm-dialog-title');
+        const descEl = document.getElementById('confirm-dialog-desc');
+        const iconBox = document.getElementById('confirm-icon-box');
+        const proceedBtn = document.getElementById('btn-confirm-proceed');
+        const proceedText = document.getElementById('btn-confirm-text');
+        const snippetWrap = document.getElementById('confirm-post-snippet');
+        const snippetChan = document.getElementById('confirm-snippet-channel');
+        const snippetText = document.getElementById('confirm-snippet-text');
+
+        if (!modal) {
+          resolve(confirm(desc || title));
+          return;
+        }
+
+        titleEl.textContent = title;
+        descEl.textContent = desc;
+        proceedText.textContent = confirmText;
+
+        if (post) {
+          snippetWrap.style.display = 'block';
+          const chan = post.channel_name || post.platform || 'Buffer Queue';
+          snippetChan.innerHTML = `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;"></span> Kênh: ${escapeHtml(chan)}`;
+          const text = post.text || post.caption || post.title || 'Không có tiêu đề';
+          snippetText.textContent = text.replace(/\s+/g, ' ').trim().slice(0, 140) + (text.length > 140 ? '...' : '');
+        } else {
+          snippetWrap.style.display = 'none';
+        }
+
+        if (type === 'delete' || type === 'danger') {
+          iconBox.className = 'custom-confirm-icon icon-danger';
+          iconBox.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`;
+          proceedBtn.className = 'btn-confirm-primary btn-confirm-danger';
+        } else {
+          iconBox.className = 'custom-confirm-icon icon-publish';
+          iconBox.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+          proceedBtn.className = 'btn-confirm-primary btn-confirm-publish';
+        }
+
+        modal.style.display = 'flex';
+      });
+    }
+
+    function closeCustomConfirm(result = false) {
+      const modal = document.getElementById('custom-confirm-modal');
+      if (modal) modal.style.display = 'none';
+      if (currentConfirmResolve) {
+        currentConfirmResolve(result);
+        currentConfirmResolve = null;
+      }
+    }
+
+    function handleConfirmBackdropClick(event) {
+      if (event.target && event.target.id === 'custom-confirm-modal') {
+        closeCustomConfirm(false);
+      }
+    }
+
+    function executeConfirmAction() {
+      closeCustomConfirm(true);
+    }
+
+    let currentPublishPolling = null;
+    function startPollingForPublishedPost(targetPostId) {
+      if (currentPublishPolling) clearInterval(currentPublishPolling);
+      let count = 0;
+      const maxCount = 30; // 30 lần x 3s ~ 90s
+
+      currentPublishPolling = setInterval(async () => {
+        count++;
+        if (count > maxCount) {
+          clearInterval(currentPublishPolling);
+          currentPublishPolling = null;
+          return;
+        }
+
+        try {
+          await loadBufferPosts(true);
+          const p = allPostsData.find(x => x.id === targetPostId || x.post_id === targetPostId || x.buffer_post_id === targetPostId);
+          if (p && isSentPost(p)) {
+            clearInterval(currentPublishPolling);
+            currentPublishPolling = null;
+            showToast('🎉 Bài viết đã hoàn tất xuất bản và đồng bộ vào Google Sheet!', 'success');
+            // Switch sang tab Sent và reload để hiển thị người dùng thấy bài
+            switchStatusTab('sent');
+          }
+        } catch (_) {}
+      }, 3000);
+    }
+
+    /* ── PUBLISH NOW HANDLER ── */
+    async function handlePublishNow(postId, event) {
+      if (event) event.stopPropagation();
+      closeAllDropdowns();
+      const btn = event?.currentTarget;
+      const post = allPostsData.find(p => p.id === postId || p.post_id === postId);
+
+      const confirmed = await showConfirmDialog({
+        type: 'publish',
+        title: 'Xuất bản bài viết ngay?',
+        desc: 'Bài viết sẽ được đăng trực tiếp lên kênh ngay lập tức và tự động đồng bộ vào Google Sheet (Publish Content).',
+        confirmText: 'Đăng ngay',
+        post
+      });
+      if (!confirmed) return;
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-mini" style="width:12px;height:12px;"></span> Đang đăng...`;
+      }
+
+      if (post) {
+        post.status = 'sending';
+        updateStatsCounters(allPostsData);
+        applyFilters(false);
+      }
+
+      try {
+        const postText = post?.text || post?.caption || '';
+        const res = await fetch(`/api/buffer/posts/${encodeURIComponent(postId)}/publish-now`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: postText })
+        });
+        const data = await res.json();
+        if (data.success) {
+          // Cập nhật optimistic: đánh dấu bài là 'sent' ngay lập tức trong local data
+          // để sau khi reload, bài xuất hiện đúng tab Sent
+          if (post) {
+            post.status = 'sent';
+            post.sent_at = post.sent_at || new Date().toISOString();
+          }
+
+          // Reload dữ liệu thật từ server
+          await loadBufferPosts(false, true);
+
+          if (data.published) {
+            showToast('🎉 Đã xuất bản thành công & đồng bộ ngay vào Google Sheet!', 'success');
+          } else {
+            showToast('🚀 Đã gửi lệnh xuất bản, đang đồng bộ vào Google Sheet...', 'info');
+          }
+
+          // Switch sang tab Sent để user thấy bài vừa đăng ngay lập tức
+          switchStatusTab('sent');
+
+          // Nếu server chưa xác nhận published, poll tiếp tục để chờ đồng bộ Sheet
+          if (!data.published) {
+            startPollingForPublishedPost(postId);
+          }
+        } else {
+          showToast('⚠️ Lỗi xuất bản: ' + (data.error || 'Không thể đăng'), 'warning');
+          // Restore optimistic update nếu thất bại
+          if (post) delete post.status;
+          await loadBufferPosts(false, true);
+        }
+      } catch (err) {
+        showToast('❌ Lỗi kết nối: ' + err.message, 'error');
+        if (post) delete post.status;
+        await loadBufferPosts(false, true);
+      }
+    }
+
+
+    /* ── DELETE POST HANDLER ── */
+    async function handleDeletePost(postId, event) {
+      if (event) event.stopPropagation();
+      closeAllDropdowns();
+      const post = allPostsData.find(p => p.id === postId || p.post_id === postId);
+      const isSent = post ? isSentPost(post) : false;
+
+      const confirmed = await showConfirmDialog({
+        type: 'delete',
+        title: isSent ? 'Xóa bài viết?' : 'Xóa bài viết khỏi Buffer?',
+        desc: isSent
+          ? 'Bản ghi bài viết sẽ được xóa khỏi Google Sheet (Publish Content). Thao tác này không thể hoàn tác.'
+          : 'Bài viết sẽ bị xóa vĩnh viễn khỏi hàng đợi Buffer. Thao tác này không thể hoàn tác.',
+        confirmText: 'Xóa',
+        post
+      });
+      if (!confirmed) return;
+
+      const card = document.getElementById(`post-card-${postId}`);
+      if (card) {
+        card.style.opacity = '0.4';
+        card.style.pointerEvents = 'none';
+      }
+
+      try {
+        const queryParams = new URLSearchParams();
+        if (isSent) {
+          queryParams.set('is_sent', 'true');
+          if (post?.publish_row) queryParams.set('publish_row', post.publish_row);
+          if (post?.source_origin) queryParams.set('origin', post.source_origin);
+        }
+        const qs = queryParams.toString() ? `?${queryParams.toString()}` : '';
+        const res = await fetch(`/api/buffer/posts/${encodeURIComponent(postId)}${qs}`, {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(isSent ? '🗑️ Đã xóa bản ghi khỏi Google Sheet thành công!' : '🗑️ Đã xóa bài viết thành công!');
+          allPostsData = allPostsData.filter(p => p.id !== postId && p.post_id !== postId);
+          updateStatsCounters(allPostsData);
+          applyFilters(false);
+        } else {
+          showToast('⚠️ Lỗi xóa bài: ' + (data.error || 'Không thể xóa'), 'warning');
+          if (card) {
+            card.style.opacity = '1';
+            card.style.pointerEvents = 'auto';
+          }
+        }
+      } catch (err) {
+        showToast('❌ Lỗi kết nối: ' + err.message, 'error');
+        if (card) {
+          card.style.opacity = '1';
+          card.style.pointerEvents = 'auto';
+        }
+      }
+    }
+
+    function handleCopyPostId(postId, event) {
+      if (event) event.stopPropagation();
+      closeAllDropdowns();
+      navigator.clipboard.writeText(postId).then(() => {
+        showToast(`📋 Đã sao chép ID: ${postId}`);
+      });
+    }
+
+    function handleCopyCaption(postId, event) {
+      if (event) event.stopPropagation();
+      closeAllDropdowns();
+      const p = allPostsData.find(item => item.id === postId || item.post_id === postId);
+      if (!p) return;
+      const text = p.caption || p.text || '';
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 Đã sao chép toàn bộ nội dung caption!');
+      });
+    }
+
+    /* ── EDIT POST MODAL LOGIC ── */
+    function openEditPostModal(postId) {
+      initFlatpickr();
+
+      const post = allPostsData.find(p => p.id === postId || p.post_id === postId);
+      if (!post) return showToast('❌ Không tìm thấy bài viết', 'error');
+      currentEditingPost = post;
+
+      document.getElementById('edit-modal-post-id').innerText = post.post_id || post.id || '--';
+
+      const { name, channelLabel, avatarUrl } = getChannelMeta(post);
+      const isQueued = isQueuePost(post);
+
+      // Channel badge in modal header
+      document.getElementById('edit-modal-channel-badge').innerHTML = `
+        <span class="badge-channel ${channelLabel.includes('TikTok') ? 'channel-tiktok' : 'channel-page'}" style="font-size: 11px;">
+          ${escapeHtml(name)} • ${channelLabel}
+        </span>
+      `;
+
+      // Fill textarea
+      const cap = post.caption || post.text || '';
+      document.getElementById('edit-modal-caption').value = cap;
+      document.getElementById('edit-char-count').innerText = `${cap.length} ký tự`;
+
+      // Toggle Draft/Queue button
+      const btnToggle = document.getElementById('btn-toggle-draft');
+      if (isQueued) {
+        btnToggle.innerText = 'Chuyển sang Bản nháp (Move to Drafts)';
+        btnToggle.onclick = () => savePostChanges({ saveToDraft: true });
+      } else {
+        btnToggle.innerText = 'Chuyển vào Hàng đợi (Queue)';
+        btnToggle.onclick = () => savePostChanges({ saveToDraft: false });
+      }
+
+      // Schedule Datetime Picker
+      if (editFlatpickrInstance) {
+        if (post.due_at) {
+          editFlatpickrInstance.setDate(new Date(post.due_at), true);
+        } else {
+          editFlatpickrInstance.clear();
+        }
+      }
+
+      // Render media attachments strip & TikTok preview
+      renderEditModalMedia(post);
+
+      // Set up Phone Preview Header
+      document.getElementById('preview-platform-title').innerHTML = `
+        <span>${channelLabel} Preview</span>
+        <span style="color: #94a3b8; font-size: 12px;">ⓘ</span>
+      `;
+      document.getElementById('preview-channel-name').innerText = `@${name}`;
+      document.getElementById('preview-sound-name').innerText = `âm thanh gốc - ${name}`;
+
+      const prevAvatar = document.getElementById('preview-avatar');
+      if (avatarUrl) prevAvatar.src = avatarUrl;
+
+      syncPhonePreviewText();
+
+      // Show modal
+      document.getElementById('modal-edit-post').style.display = 'flex';
+    }
+
+    function renderEditModalMedia(post) {
+      const container = document.getElementById('modal-media-strip');
+      const heading = document.getElementById('modal-media-heading');
+      const assets = post.assets || [];
+      const isVideo = post.type === 'VIDEO';
+
+      const canvas = document.getElementById('tiktok-media-canvas');
+
+      if (isVideo) {
+        heading.innerText = 'Video Đính Kèm';
+        const videoAsset = assets.find(a => (a.source || '').includes('.mp4') || (a.source || '').includes('video')) || assets[0] || {};
+        const videoSrc = resolveMediaUrl(videoAsset.source || videoAsset.url || '');
+        const poster = resolveMediaUrl(videoAsset.thumbnail || '');
+
+        container.innerHTML = `
+          <div style="width: 100%;">
+            <video class="video-preview-player" controls preload="metadata" poster="${poster}">
+              <source src="${videoSrc}" type="video/mp4">
+              Trình duyệt không hỗ trợ phát video.
+            </video>
+          </div>
+        `;
+
+        canvas.innerHTML = `
+          <video style="width: 100%; height: 100%; object-fit: cover;" autoplay loop muted playsinline poster="${poster}">
+            <source src="${videoSrc}" type="video/mp4">
+          </video>
+        `;
+      } else if (assets.length > 0) {
+        heading.innerText = `Album Ảnh Đính Kèm (${assets.length} ảnh)`;
+        container.innerHTML = assets.map((a, i) => {
+          const src = resolveMediaUrl(a.thumbnail || a.source || '');
+          return `<img src="${src}" class="modal-attach-thumb" alt="Ảnh ${i + 1}" onclick="window.open('${src}', '_blank')" title="Click để phóng to ảnh gốc">`;
+        }).join('');
+
+        const firstSrc = resolveMediaUrl(assets[0]?.thumbnail || assets[0]?.source || '');
+        canvas.innerHTML = `
+          <img id="preview-main-img" src="${firstSrc}" class="tiktok-bg-img" alt="preview">
+        `;
+      } else {
+        heading.innerText = 'Media Đính Kèm';
+        container.innerHTML = `<span style="font-size: 12px; color: #94a3b8;">Không có media đính kèm</span>`;
+        canvas.innerHTML = `<div style="color: #64748b; font-size: 12px; display: flex; align-items: center; justify-content: center; height: 100%;">Không có media</div>`;
+      }
+    }
+
+    function handleCaptionInput() {
+      const val = document.getElementById('edit-modal-caption').value || '';
+      document.getElementById('edit-char-count').innerText = `${val.length} ký tự`;
+      syncPhonePreviewText();
+    }
+
+    function syncPhonePreviewText() {
+      const val = document.getElementById('edit-modal-caption').value || '';
+      const snippet = val.slice(0, 150) || 'Nội dung caption sẽ hiển thị ở đây...';
+      const capEl = document.getElementById('preview-caption-body');
+      if (capEl) {
+        capEl.innerText = snippet;
+      }
+    }
+
+    function copyModalCaption() {
+      const val = document.getElementById('edit-modal-caption').value || '';
+      navigator.clipboard.writeText(val).then(() => {
+        showToast('📋 Đã sao chép caption!');
+      });
+    }
+
+    function closeEditPostModal() {
+      const videoEl = document.querySelector('#modal-media-strip video');
+      if (videoEl) {
+        try { videoEl.pause(); } catch (_) {}
+      }
+      document.getElementById('modal-edit-post').style.display = 'none';
+      currentEditingPost = null;
+    }
+
+    function handleEditOverlayClick(e) {
+      if (e.target.id === 'modal-edit-post') {
+        closeEditPostModal();
+      }
+    }
+
+    async function submitEditPost() {
+      await savePostChanges({ saveToDraft: false });
+    }
+
+    async function savePostChanges(options = {}) {
+      if (!currentEditingPost) return;
+      const postId = currentEditingPost.id || currentEditingPost.post_id;
+      const newCaption = document.getElementById('edit-modal-caption').value;
+      const dateStr = document.getElementById('edit-post-due-at').value;
+
+      let targetDueAt = null;
+      if (dateStr) {
+        const parsed = new Date(dateStr);
+        if (!isNaN(parsed.getTime())) {
+          targetDueAt = parsed.toISOString();
+        }
+      }
+
+      const saveToDraft = options.saveToDraft !== undefined ? options.saveToDraft : isDraftPost(currentEditingPost);
+
+      const saveBtn = document.getElementById('btn-save-edit-post');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = `<span class="spinner-mini" style="width:12px;height:12px;"></span> Đang lưu...`;
+      }
+
+      try {
+        const res = await fetch(`/api/buffer/posts/${encodeURIComponent(postId)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: newCaption,
+            due_at: targetDueAt,
+            save_to_draft: saveToDraft,
+            mode: targetDueAt ? 'customScheduled' : (saveToDraft ? 'addToQueue' : 'addToQueue')
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('💾 Đã lưu thay đổi bài viết thành công!');
+
+          const idx = allPostsData.findIndex(p => p.id === postId || p.post_id === postId);
+          if (idx !== -1) {
+            allPostsData[idx].caption = newCaption;
+            allPostsData[idx].text = newCaption;
+            if (targetDueAt) allPostsData[idx].due_at = targetDueAt;
+            if (saveToDraft) allPostsData[idx].status = 'draft';
+            else if (targetDueAt) allPostsData[idx].status = 'scheduled';
+          }
+
+          closeEditPostModal();
+          updateStatsCounters(allPostsData);
+          applyFilters(false);
+        } else {
+          showToast('⚠️ Lỗi lưu bài: ' + (data.error || 'Không thể cập nhật'), 'warning');
+        }
+      } catch (err) {
+        showToast('❌ Lỗi kết nối: ' + err.message, 'error');
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = `<span>Lưu thay đổi</span>`;
+        }
+      }
+    }
+
+
+
+    // Escape key listener for closing modals
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const confirmModal = document.getElementById('custom-confirm-modal');
+        if (confirmModal && confirmModal.style.display !== 'none') {
+          closeCustomConfirm(false);
+          return;
+        }
+        closeEditPostModal();
+        closeAllDropdowns();
+      }
+    });
+
+    // Initialize page
+    initFlatpickr();
+    initAutoLoadObserver();
+    loadBufferPosts(false, true);
+  </script>
+</body>
+</html>
